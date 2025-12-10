@@ -1,0 +1,10 @@
+--- packages\debugger\src\index.ts (old)
++++ packages\debugger\src\index.ts (new)
+@@ -12,6 +12,5 @@
+   IDebuggerConfig,
+   IDebuggerSources,
+   IDebuggerSidebar,
+-  IDebuggerHandler,
+-  IDebuggerSourceViewer
++  IDebuggerHandler
+ } from './tokens';

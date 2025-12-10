@@ -1,0 +1,11 @@
+--- buildutils\src\update-dependency.ts (old)
++++ buildutils\src\update-dependency.ts (new)
+@@ -8,7 +8,7 @@
+ import * as utils from './utils';
+ import packageJson from 'package-json';
+ 
+-import { program as commander } from 'commander';
++import commander from 'commander';
+ import semver from 'semver';
+ 
+ const versionCache = new Map();

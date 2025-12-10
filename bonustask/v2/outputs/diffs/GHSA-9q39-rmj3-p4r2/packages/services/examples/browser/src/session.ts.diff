@@ -1,0 +1,11 @@
+--- packages\services\examples\browser\src\session.ts (old)
++++ packages\services\examples\browser\src\session.ts (new)
+@@ -10,7 +10,7 @@
+ 
+ import { log } from './log';
+ 
+-export async function main(): Promise<void> {
++export async function main() {
+   log('Starting session manager');
+   const kernelManager = new KernelManager();
+   const sessionManager = new SessionManager({ kernelManager });

@@ -1,0 +1,51 @@
+--- packages\services\test\utils.spec.ts (old)
++++ packages\services\test\utils.spec.ts (new)
+@@ -1,7 +1,11 @@
+ // Copyright (c) Jupyter Development Team.
+ // Distributed under the terms of the Modified BSD License.
+ 
+-import { expectFailure, isFulfilled, testEmission } from '@jupyterlab/testing';
++import {
++  expectFailure,
++  isFulfilled,
++  testEmission
++} from '@jupyterlab/testutils';
+ import { PromiseDelegate } from '@lumino/coreutils';
+ import { Signal } from '@lumino/signaling';
+ 
+@@ -9,7 +13,7 @@
+   describe('testEmission', () => {
+     it('should resolve to the given value', async () => {
+       const owner = {};
+-      const x = new Signal<typeof owner, number>(owner);
++      const x = new Signal<{}, number>(owner);
+       const emission = testEmission(x, {
+         value: 'done'
+       });
+@@ -19,7 +23,7 @@
+ 
+     it('should find the given emission', async () => {
+       const owner = {};
+-      const x = new Signal<typeof owner, number>(owner);
++      const x = new Signal<{}, number>(owner);
+       const emission = testEmission(x, {
+         find: (a, b) => b === 1,
+         value: 'done'
+@@ -32,7 +36,7 @@
+ 
+     it('should reject if the test throws an error', async () => {
+       const owner = {};
+-      const x = new Signal<typeof owner, number>(owner);
++      const x = new Signal<{}, number>(owner);
+       const emission = testEmission(x, {
+         find: (a, b) => b === 1,
+         test: (a, b) => {
+@@ -48,7 +52,7 @@
+ 
+     it('should resolve if the test succeeds', async () => {
+       const owner = {};
+-      const x = new Signal<typeof owner, number>(owner);
++      const x = new Signal<{}, number>(owner);
+       const emission = testEmission(x, {
+         find: (a, b) => b === 1,
+         test: (a, b) => {

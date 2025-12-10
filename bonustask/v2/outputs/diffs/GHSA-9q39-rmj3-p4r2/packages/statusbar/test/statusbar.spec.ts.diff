@@ -1,0 +1,11 @@
+--- packages\statusbar\test\statusbar.spec.ts (old)
++++ packages\statusbar\test\statusbar.spec.ts (new)
+@@ -41,7 +41,7 @@
+         statusBar.registerStatusItem('item', { item: item1 });
+         expect(
+           statusBar.registerStatusItem.bind(statusBar, 'item', { item: item2 })
+-        ).toThrow();
++        ).toThrowError();
+       });
+ 
+       it('should put higher rank left items closer to the middle', () => {

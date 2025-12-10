@@ -1,0 +1,7 @@
+--- examples\federated\md_package\mime.js (old)
++++ examples\federated\md_package\mime.js (new)
+@@ -1,4 +1,3 @@
+-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+ // Copyright (c) Jupyter Development Team.
+ // Distributed under the terms of the Modified BSD License.
+ 

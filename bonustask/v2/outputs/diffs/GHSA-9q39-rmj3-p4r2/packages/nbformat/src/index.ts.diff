@@ -1,0 +1,20 @@
+--- packages\nbformat\src\index.ts (old)
++++ packages\nbformat\src\index.ts (new)
+@@ -102,7 +102,7 @@
+   value: MultilineString | PartialJSONObject
+ ): boolean {
+   // Check if "application/json" or "application/foo+json"
+-  const jsonTest = /^application\/.+\+json$/;
++  const jsonTest = /^application\/(.*?)+\+json$/;
+   const isJSONType = type === 'application/json' || jsonTest.test(type);
+ 
+   const isString = (x: any) => {
+@@ -141,7 +141,7 @@
+ /**
+  * A type which describes the type of cell.
+  */
+-export type CellType = 'code' | 'markdown' | 'raw' | string;
++export type CellType = 'code' | 'markdown' | 'raw';
+ 
+ /**
+  * The Jupyter metadata namespace.

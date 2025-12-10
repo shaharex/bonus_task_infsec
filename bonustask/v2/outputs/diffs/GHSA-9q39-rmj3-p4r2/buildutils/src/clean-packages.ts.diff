@@ -1,0 +1,20 @@
+--- buildutils\src\clean-packages.ts (old)
++++ buildutils\src\clean-packages.ts (new)
+@@ -6,14 +6,14 @@
+ import * as fs from 'fs-extra';
+ import * as path from 'path';
+ import * as glob from 'glob';
+-import { exitOnUncaughtException, readJSONFile } from './utils';
++import { exitOnUuncaughtException, readJSONFile } from './utils';
+ 
+-exitOnUncaughtException();
++exitOnUuncaughtException();
+ 
+ // Get all of the packages.
+ const basePath = path.resolve('.');
+ const baseConfig = readJSONFile(path.join(basePath, 'package.json'));
+-const packageConfig = baseConfig.workspaces.packages ?? baseConfig.workspaces;
++const packageConfig = baseConfig.workspaces.packages;
+ const skipSource = process.argv.indexOf('packages') === -1;
+ const skipExamples = process.argv.indexOf('examples') === -1;
+ 

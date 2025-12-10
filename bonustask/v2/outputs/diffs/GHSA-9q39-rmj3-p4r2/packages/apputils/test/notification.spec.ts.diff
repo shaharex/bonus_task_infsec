@@ -1,0 +1,34 @@
+--- packages\apputils\test\notification.spec.ts (old)
++++ packages\apputils\test\notification.spec.ts (new)
+@@ -145,13 +145,13 @@
+ 
+         const done = new PromiseDelegate<void>();
+         // Wait for promise to allow notification update to occurs
+-        setTimeout(() => {
++        setImmediate(() => {
+           expect(Notification.manager.notifications[0].type).toEqual('success');
+           expect(Notification.manager.notifications[0].message).toEqual(
+             'Promise was resolved: Done'
+           );
+           done.resolve();
+-        }, 0);
++        });
+ 
+         await done.promise;
+       });
+@@ -179,13 +179,13 @@
+ 
+         const done = new PromiseDelegate<void>();
+         // Wait for promise to allow notification update to occurs
+-        setTimeout(() => {
++        setImmediate(() => {
+           expect(Notification.manager.notifications[0].type).toEqual('error');
+           expect(Notification.manager.notifications[0].message).toEqual(
+             'Promise got rejected: Failed'
+           );
+           done.resolve();
+-        }, 0);
++        });
+ 
+         await done.promise;
+       });

@@ -1,0 +1,32 @@
+--- jupyterlab\utils.py (old)
++++ jupyterlab\utils.py (new)
+@@ -1,11 +1,8 @@
+-# Copyright (c) Jupyter Development Team.
+-# Distributed under the terms of the Modified BSD License.
+-
+ import functools
+ import warnings
+ 
+ 
+-class jupyterlab_deprecation(Warning):  # noqa
++class jupyterlab_deprecation(Warning):
+     """Create our own deprecation class, since Python >= 2.7
+     silences deprecations by default.
+     """
+@@ -13,7 +10,7 @@
+     pass
+ 
+ 
+-class deprecated:  # noqa
++class deprecated(object):
+     """Decorator to mark deprecated functions with warning.
+     Adapted from `scikit-image/skimage/_shared/utils.py`.
+ 
+@@ -34,6 +31,7 @@
+         self.removed_version = removed_version
+ 
+     def __call__(self, func):
++
+         alt_msg = ""
+         if self.alt_func is not None:
+             alt_msg = " Use ``%s`` instead." % self.alt_func

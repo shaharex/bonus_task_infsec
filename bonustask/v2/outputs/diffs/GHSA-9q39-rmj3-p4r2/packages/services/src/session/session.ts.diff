@@ -1,0 +1,37 @@
+--- packages\services\src\session\session.ts (old)
++++ packages\services\src\session\session.ts (new)
+@@ -1,5 +1,7 @@
+ // Copyright (c) Jupyter Development Team.
+ // Distributed under the terms of the Modified BSD License.
++
++import { IIterator } from '@lumino/algorithm';
+ 
+ import { IDisposable, IObservableDisposable } from '@lumino/disposable';
+ 
+@@ -269,7 +271,7 @@
+    *
+    * @returns A new iterator over the running sessions.
+    */
+-  running(): IterableIterator<IModel>;
++  running(): IIterator<IModel>;
+ 
+   /**
+    * Start a new session.
+@@ -367,7 +369,7 @@
+  * The session model returned by the server.
+  *
+  * #### Notes
+- * See the [Jupyter Server API](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/services/api/api.yaml#!/sessions).
++ * See the [Jupyter Notebook API](http://petstore.swagger.io/?url=https://raw.githubusercontent.com/jupyter/notebook/master/notebook/services/api/api.yaml#!/sessions).
+  */
+ export interface IModel {
+   /**
+@@ -388,7 +390,7 @@
+  * parameter is not technically required, but is often assumed to be nonempty,
+  * so we require it too.
+  *
+- * See the [Jupyter Server API](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/services/api/api.yaml#!/sessions).
++ * See the [Jupyter Notebook API](http://petstore.swagger.io/?url=https://raw.githubusercontent.com/jupyter/notebook/master/notebook/services/api/api.yaml#!/sessions).
+  */
+ export type ISessionOptions = Pick<IModel, 'path' | 'type' | 'name'> & {
+   kernel?: Partial<Pick<Kernel.IModel, 'name'>>;

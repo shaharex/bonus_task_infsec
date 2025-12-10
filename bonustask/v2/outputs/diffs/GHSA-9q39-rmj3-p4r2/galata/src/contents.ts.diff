@@ -1,0 +1,298 @@
+--- galata\src\contents.ts (old)
++++ galata\src\contents.ts (new)
+@@ -2,12 +2,15 @@
+ // Distributed under the terms of the Modified BSD License.
+ 
+ import { URLExt } from '@jupyterlab/coreutils';
+-import type { IDocumentManager } from '@jupyterlab/docmanager';
+-import type { Contents } from '@jupyterlab/services';
+-import type { APIRequestContext, APIResponse, Page } from '@playwright/test';
+-import type { ReadStream } from 'fs-extra';
++import { IDocumentManager } from '@jupyterlab/docmanager';
++import { Contents } from '@jupyterlab/services';
++import { APIRequestContext, APIResponse, Page } from '@playwright/test';
++import fetch, { RequestInit, Response } from 'node-fetch';
+ import * as path from 'path';
+-import type { IPluginNameToInterfaceMap } from './extension';
++import {
++  IPluginNameToInterfaceMap,
++  PLUGIN_ID_DOC_MANAGER
++} from './inpage/tokens';
+ import * as Utils from './utils';
+ 
+ /**
+@@ -21,25 +24,21 @@
+   /**
+    * Construct a new instance of ContentsHelper
+    *
++   * @param baseURL Server base URL
++   * @param page Playwright page model object
+    * @param request Playwright API request context
+-   * @param page Playwright page model object
+    */
+   constructor(
+-    request?: APIRequestContext,
+-    readonly page?: Page
++    readonly baseURL: string,
++    readonly page?: Page,
++    request?: APIRequestContext
+   ) {
+     if (request) {
+       this.request = request;
+     } else if (page) {
+       this.request = page.context().request;
+-    } else {
+-      throw new TypeError(
+-        'You must provide `request` or `page` to the contents helper.'
+-      );
+-    }
+-  }
+-
+-  readonly request: APIRequestContext;
++    }
++  }
+ 
+   /**
+    * Return the model for a path.
+@@ -66,7 +65,10 @@
+       console.error(`Fail to get content metadata for ${path}`, error);
+     }
+ 
+-    const succeeded = response?.status() === 200;
++    const succeeded =
++      (typeof response?.status === 'function'
++        ? response.status()
++        : response?.status) === 200;
+ 
+     if (succeeded) {
+       return response!.json();
+@@ -182,7 +184,7 @@
+     try {
+       response = await this._fetch(destinationPath, {
+         method: 'PUT',
+-        data
++        body: data
+       });
+     } catch (error) {
+       console.error(
+@@ -191,7 +193,10 @@
+       );
+     }
+ 
+-    const succeeded = response?.status() === 201;
++    const succeeded =
++      (typeof response?.status === 'function'
++        ? response.status()
++        : response?.status) === 201;
+ 
+     if (succeeded) {
+       return await this.fileExists(destinationPath);
+@@ -239,7 +244,10 @@
+       console.error(`Failed to delete file ${filePath}`, error);
+     }
+ 
+-    const succeeded = response?.status() === 204;
++    const succeeded =
++      (typeof response?.status === 'function'
++        ? response.status()
++        : response?.status) === 204;
+ 
+     if (succeeded) {
+       return !(await this.fileExists(fileName));
+@@ -296,15 +304,14 @@
+       // => Use galata in-page if page is available
+       return await this.page.evaluate(
+         async ({ pluginId, oldName, newName }) => {
+-          const docManager = (await window.galata.getPlugin(
++          const docManager = (await window.galataip.getPlugin(
+             pluginId
+           )) as IDocumentManager;
+           const result = await docManager.rename(oldName, newName);
+           return result !== null;
+         },
+         {
+-          pluginId:
+-            '@jupyterlab/docmanager-extension:manager' as keyof IPluginNameToInterfaceMap,
++          pluginId: PLUGIN_ID_DOC_MANAGER as keyof IPluginNameToInterfaceMap,
+           oldName: oldName,
+           newName: newName
+         }
+@@ -316,13 +323,16 @@
+     try {
+       response = await this._fetch(oldName, {
+         method: 'PATCH',
+-        data: JSON.stringify({ path: newName })
++        body: JSON.stringify({ path: newName })
+       });
+     } catch (error) {
+       console.error(`Failed to rename file ${oldName} to ${newName}`, error);
+     }
+ 
+-    const succeeded = response?.status() === 200;
++    const succeeded =
++      (typeof response?.status === 'function'
++        ? response.status()
++        : response?.status) === 200;
+ 
+     if (succeeded) {
+       return await this.fileExists(newName);
+@@ -348,26 +358,22 @@
+    * @param trigger Action to trigger while waiting
+    */
+   async waitForAPIResponse(
+-    trigger?: () => Promise<void> | void,
+-    options?: {
+-      timeout?: number;
+-    }
++    trigger?: () => Promise<void> | void
+   ): Promise<void> {
+     if (!this.page) {
+       return Promise.reject('No page available.');
+     }
+ 
+     await Promise.all([
+-      this.page.waitForResponse(
+-        response => response.url().includes('api/contents'),
+-        options
++      this.page.waitForResponse(response =>
++        response.url().includes('api/contents')
+       ),
+       Promise.resolve(trigger?.call(this))
+     ]);
+   }
+ 
+   protected async _createDirectory(dirPath: string): Promise<boolean> {
+-    const data = JSON.stringify({
++    const body = JSON.stringify({
+       format: 'json',
+       type: 'directory'
+     });
+@@ -377,103 +383,44 @@
+     try {
+       response = await this._fetch(dirPath, {
+         method: 'PUT',
+-        data
++        body
+       });
+     } catch (error) {
+       console.error(`Failed to create directory ${dirPath}`, error);
+     }
+ 
+-    return response?.status() === 201;
++    return (
++      (typeof response?.status === 'function'
++        ? response.status()
++        : response?.status) === 201
++    );
+   }
+ 
+   private async _fetch(
+     path: string,
+-    options: {
+-      /**
+-       * Allows to set post data of the request. If the data parameter is an object, it will be serialized to json string and
+-       * `content-type` header will be set to `application/json` if not explicitly set. Otherwise the `content-type` header will
+-       * be set to `application/octet-stream` if not explicitly set.
+-       */
+-      data?: string | Buffer;
+-
+-      /**
+-       * Whether to throw on response codes other than 2xx and 3xx. By default response object is returned for all status codes.
+-       */
+-      failOnStatusCode?: boolean;
+-
+-      /**
+-       * Provides an object that will be serialized as html form using `application/x-www-form-urlencoded` encoding and sent as
+-       * this request body. If this parameter is specified `content-type` header will be set to
+-       * `application/x-www-form-urlencoded` unless explicitly provided.
+-       */
+-      form?: { [key: string]: string | number | boolean };
+-
+-      /**
+-       * Allows to set HTTP headers.
+-       */
+-      headers?: { [key: string]: string };
+-
+-      /**
+-       * Whether to ignore HTTPS errors when sending network requests. Defaults to `false`.
+-       */
+-      ignoreHTTPSErrors?: boolean;
+-
+-      /**
+-       * If set changes the fetch method (e.g. [PUT](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/PUT) or
+-       * [POST](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST)). If not specified, GET method is used.
+-       */
+-      method?: string;
+-
+-      /**
+-       * Provides an object that will be serialized as html form using `multipart/form-data` encoding and sent as this request
+-       * body. If this parameter is specified `content-type` header will be set to `multipart/form-data` unless explicitly
+-       * provided. File values can be passed either as [`fs.ReadStream`](https://nodejs.org/api/fs.html#fs_class_fs_readstream)
+-       * or as file-like object containing file name, mime-type and its content.
+-       */
+-      multipart?: {
+-        [key: string]:
+-          | string
+-          | number
+-          | boolean
+-          | ReadStream
+-          | {
+-              /**
+-               * File name
+-               */
+-              name: string;
+-
+-              /**
+-               * File type
+-               */
+-              mimeType: string;
+-
+-              /**
+-               * File content
+-               */
+-              buffer: Buffer;
+-            };
+-      };
+-
+-      /**
+-       * Query parameters to be sent with the URL.
+-       */
+-      params?: { [key: string]: string | number | boolean };
+-
+-      /**
+-       * Request timeout in milliseconds. Defaults to `30000` (30 seconds). Pass `0` to disable timeout.
+-       */
+-      timeout?: number;
+-    } = { method: 'GET' }
+-  ): Promise<APIResponse> {
++    request: RequestInit = { method: 'GET' }
++  ): Promise<APIResponse | Response | null> {
+     const baseUrl = this.page ? await Utils.getBaseUrl(this.page) : '/';
+     const token = this.page ? await Utils.getToken(this.page) : '';
+ 
+     let url = URLExt.join(baseUrl, 'api/contents', path);
+ 
+     if (token) {
+-      options.headers = { Authorization: `Token ${token}` };
+-    }
+-
+-    return this.request.fetch(url, options);
+-  }
++      request.headers = { Authorization: `Token ${token}` };
++    }
++
++    let response: APIResponse | Response | null = null;
++
++    if (this.request) {
++      response = await this.request.fetch(url, {
++        ...(request as any),
++        data: request.body
++      });
++    } else {
++      response = await fetch(URLExt.join(this.baseURL, url), request);
++    }
++    return response;
++  }
++
++  readonly request: APIRequestContext | null = null;
+ }

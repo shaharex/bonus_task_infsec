@@ -1,0 +1,20 @@
+--- packages\services\src\kernelspec\manager.ts (old)
++++ packages\services\src\kernelspec\manager.ts (new)
+@@ -14,8 +14,7 @@
+  */
+ export class KernelSpecManager
+   extends BaseManager
+-  implements KernelSpec.IManager
+-{
++  implements KernelSpec.IManager {
+   /**
+    * Construct a new kernel spec manager.
+    *
+@@ -148,6 +147,6 @@
+     /**
+      * When the manager stops polling the API. Defaults to `when-hidden`.
+      */
+-    standby?: Poll.Standby | (() => boolean | Poll.Standby);
++    standby?: Poll.Standby;
+   }
+ }

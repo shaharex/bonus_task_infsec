@@ -1,0 +1,12 @@
+
+Patch Verification Task
+Advisory: GHSA-9q39-rmj3-p4r2
+
+Vulnerable version: <= 3.6.7
+Patched version: 3.6.8
+
+Using the diffs provided, decide if the patch successfully fixes the vulnerability.
+Return JSON with fields:
+- fixes_vulnerability: yes/no/maybe
+- confidence: 0-100
+- rationale

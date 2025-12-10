@@ -1,0 +1,9 @@
+--- galata\src\helpers\index.ts (old)
++++ galata\src\helpers\index.ts (new)
+@@ -10,6 +10,4 @@
+ export * from './performance';
+ export * from './sidebar';
+ export * from './statusbar';
+-export * from './style';
+ export * from './theme';
+-export * from './debuggerpanel';

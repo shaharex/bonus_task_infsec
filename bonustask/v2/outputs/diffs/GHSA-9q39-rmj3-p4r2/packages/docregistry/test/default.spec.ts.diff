@@ -1,0 +1,117 @@
+--- packages\docregistry\test\default.spec.ts (old)
++++ packages\docregistry\test\default.spec.ts (new)
+@@ -11,10 +11,10 @@
+   IDocumentWidget,
+   TextModelFactory
+ } from '@jupyterlab/docregistry';
+-import { createFileContextWithMockedServices } from '@jupyterlab/docregistry/lib/testutils';
+ import { ServiceManager } from '@jupyterlab/services';
+-import { ServiceManagerMock } from '@jupyterlab/services/lib/testutils';
+-import { sleep } from '@jupyterlab/testing';
++import { sleep } from '@jupyterlab/testutils';
++import * as Mock from '@jupyterlab/testutils/lib/mock';
++import { toArray } from '@lumino/algorithm';
+ import { UUID } from '@lumino/coreutils';
+ import { Widget } from '@lumino/widgets';
+ 
+@@ -186,21 +186,21 @@
+             }
+           ]
+         });
+-        const context = await createFileContextWithMockedServices();
++        const context = await Mock.createFileContext();
+         const widget = factory.createNew(context);
+         const widget2 = factory.createNew(context);
+-        expect(Array.from(widget.toolbar.names())).toEqual([
++        expect(toArray(widget.toolbar.names())).toEqual([
+           'foo',
+           'bar',
+           'toolbar-popup-opener'
+         ]);
+-        expect(Array.from(widget2.toolbar.names())).toEqual([
++        expect(toArray(widget2.toolbar.names())).toEqual([
+           'foo',
+           'bar',
+           'toolbar-popup-opener'
+         ]);
+-        expect(Array.from(widget.toolbar.children()).length).toBe(3);
+-        expect(Array.from(widget2.toolbar.children()).length).toBe(3);
++        expect(toArray(widget.toolbar.children()).length).toBe(3);
++        expect(toArray(widget2.toolbar.children()).length).toBe(3);
+       });
+     });
+ 
+@@ -231,14 +231,14 @@
+     describe('#createNew()', () => {
+       it('should create a new widget given a document model and a context', async () => {
+         const factory = createFactory();
+-        const context = await createFileContextWithMockedServices();
++        const context = await Mock.createFileContext();
+         const widget = factory.createNew(context);
+         expect(widget).toBeInstanceOf(Widget);
+       });
+ 
+       it('should take an optional source widget for cloning', async () => {
+         const factory = createFactory();
+-        const context = await createFileContextWithMockedServices();
++        const context = await Mock.createFileContext();
+         const widget = factory.createNew(context);
+         const clonedWidget: IDocumentWidget = factory.createNew(
+           context,
+@@ -282,7 +282,7 @@
+       });
+ 
+       it('should accept an optional language preference', () => {
+-        const model = new DocumentModel({ languagePreference: 'foo' });
++        const model = new DocumentModel('foo');
+         expect(model.defaultKernelLanguage).toBe('foo');
+       });
+     });
+@@ -422,7 +422,7 @@
+       });
+ 
+       it('should be set by the constructor arg', () => {
+-        const model = new DocumentModel({ languagePreference: 'foo' });
++        const model = new DocumentModel('foo');
+         expect(model.defaultKernelLanguage).toBe('foo');
+       });
+     });
+@@ -531,7 +531,7 @@
+ 
+       it('should accept a language preference', () => {
+         const factory = new TextModelFactory();
+-        const model = factory.createNew({ languagePreference: 'foo' });
++        const model = factory.createNew('foo');
+         expect(model.defaultKernelLanguage).toBe('foo');
+       });
+     });
+@@ -539,8 +539,8 @@
+     describe('#preferredLanguage()', () => {
+       it('should get the preferred kernel language given an extension', () => {
+         const factory = new TextModelFactory();
+-        expect(factory.preferredLanguage('.py')).toBe('');
+-        expect(factory.preferredLanguage('.jl')).toBe('');
++        expect(factory.preferredLanguage('.py')).toBe('python');
++        expect(factory.preferredLanguage('.jl')).toBe('julia');
+       });
+     });
+   });
+@@ -553,16 +553,13 @@
+     let widget: DocumentWidget;
+ 
+     const setup = async () => {
+-      context = (await createFileContextWithMockedServices(
+-        false,
+-        manager
+-      )) as any;
++      context = await Mock.createFileContext(false, manager);
+       content = new Widget();
+       widget = new DocumentWidget({ context, content });
+     };
+ 
+     beforeAll(async () => {
+-      manager = new ServiceManagerMock();
++      manager = new Mock.ServiceManagerMock();
+       await manager.ready;
+     });
+ 

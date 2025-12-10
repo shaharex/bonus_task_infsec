@@ -1,0 +1,64 @@
+--- packages\imageviewer\test\widget.spec.ts (old)
++++ packages\imageviewer\test\widget.spec.ts (new)
+@@ -1,5 +1,13 @@
+ // Copyright (c) Jupyter Development Team.
+ // Distributed under the terms of the Modified BSD License.
++
++import { UUID } from '@lumino/coreutils';
++
++import { Contents, ServiceManager } from '@jupyterlab/services';
++
++import { Message, MessageLoop } from '@lumino/messaging';
++
++import { Widget } from '@lumino/widgets';
+ 
+ import {
+   Base64ModelFactory,
+@@ -7,13 +15,12 @@
+   DocumentRegistry,
+   DocumentWidget
+ } from '@jupyterlab/docregistry';
+-import { createFileContext } from '@jupyterlab/docregistry/lib/testutils';
++
+ import { ImageViewer, ImageViewerFactory } from '@jupyterlab/imageviewer';
+-import { Contents, ServiceManager } from '@jupyterlab/services';
+-import { ServiceManagerMock } from '@jupyterlab/services/lib/testutils';
+-import { UUID } from '@lumino/coreutils';
+-import { Message, MessageLoop } from '@lumino/messaging';
+-import { Widget } from '@lumino/widgets';
++
++import { createFileContext } from '@jupyterlab/testutils';
++
++import * as Mock from '@jupyterlab/testutils/lib/mock';
+ 
+ class LogImage extends ImageViewer {
+   methods: string[] = [];
+@@ -63,7 +70,7 @@
+   let widget: LogImage;
+ 
+   beforeAll(async () => {
+-    manager = new ServiceManagerMock();
++    manager = new Mock.ServiceManagerMock();
+     await manager.ready;
+     return manager.contents.save(IMAGE.path!, IMAGE);
+   });
+@@ -160,14 +167,17 @@
+ 
+ describe('ImageViewerFactory', () => {
+   describe('#createNewWidget', () => {
+-    it('should create an image document widget', () => {
++    it('should create an image document widget', async () => {
+       const factory = new ImageViewerFactory({
+         name: 'Image',
+         modelName: 'base64',
+         fileTypes: ['png'],
+         defaultFor: ['png']
+       });
+-      const context = createFileContext(IMAGE.path, new ServiceManagerMock());
++      const context = await createFileContext(
++        IMAGE.path,
++        new Mock.ServiceManagerMock()
++      );
+       const d = factory.createNew(context);
+       expect(d).toBeInstanceOf(DocumentWidget);
+       expect(d.content).toBeInstanceOf(ImageViewer);

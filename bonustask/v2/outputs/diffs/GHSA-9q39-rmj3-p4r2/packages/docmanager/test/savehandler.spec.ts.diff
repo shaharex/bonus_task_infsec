@@ -1,0 +1,22 @@
+--- packages\docmanager\test\savehandler.spec.ts (old)
++++ packages\docmanager\test\savehandler.spec.ts (new)
+@@ -12,8 +12,8 @@
+   signalToPromise,
+   testEmission,
+   waitForDialog
+-} from '@jupyterlab/testing';
+-import { ServiceManagerMock } from '@jupyterlab/services/lib/testutils';
++} from '@jupyterlab/testutils';
++import * as Mock from '@jupyterlab/testutils/lib/mock';
+ import { PromiseDelegate, UUID } from '@lumino/coreutils';
+ import { SaveHandler } from '../src';
+ 
+@@ -24,7 +24,7 @@
+   let handler: SaveHandler;
+ 
+   beforeAll(() => {
+-    manager = new ServiceManagerMock();
++    manager = new Mock.ServiceManagerMock();
+   });
+ 
+   beforeEach(() => {

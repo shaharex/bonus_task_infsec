@@ -1,0 +1,57 @@
+--- packages\services\test\serverconnection.spec.ts (old)
++++ packages\services\test\serverconnection.spec.ts (new)
+@@ -2,16 +2,15 @@
+ // Distributed under the terms of the Modified BSD License.
+ 
+ import { PageConfig } from '@jupyterlab/coreutils';
+-import { JupyterServer } from '@jupyterlab/testing';
++import { JupyterServer } from '@jupyterlab/testutils';
+ import { ServerConnection } from '../src';
+ import { getRequestHandler } from './utils';
+-import { KernelMessage } from '../src/kernel';
+ 
+ const server = new JupyterServer();
+ 
+ beforeAll(async () => {
+   await server.start();
+-}, 30000);
++});
+ 
+ afterAll(async () => {
+   await server.shutdown();
+@@ -26,7 +25,7 @@
+         {},
+         settings
+       );
+-      expect(response.status).toBe(200);
++      expect(response.statusText).toBe('OK');
+       const data = await response.json();
+       expect(data).toBe('hello');
+     });
+@@ -64,17 +63,6 @@
+       expect(settings.token).toBe(defaults.token);
+       expect(settings.init.credentials).toBe(defaults.init!.credentials);
+     });
+-
+-    it('should allow swapping serializer', () => {
+-      const defaults: Partial<ServerConnection.ISettings> = {
+-        serializer: {
+-          serialize: (_msg: KernelMessage.IMessage) => '',
+-          deserialize: (_data: ArrayBuffer) => ({}) as KernelMessage.IMessage
+-        }
+-      };
+-      const settings = ServerConnection.makeSettings(defaults);
+-      expect(settings.serializer).toBe(defaults.serializer);
+-    });
+   });
+ 
+   describe('.makeError()', () => {
+@@ -87,7 +75,7 @@
+         settings
+       );
+       const err = new ServerConnection.ResponseError(response);
+-      expect(err.message).toBe('Invalid response: 200 ');
++      expect(err.message).toBe('Invalid response: 200 OK');
+     });
+   });
+ 

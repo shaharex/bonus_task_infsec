@@ -1,0 +1,109 @@
+--- galata\test\benchmark\notebook.spec.ts (old)
++++ galata\test\benchmark\notebook.spec.ts (new)
+@@ -21,8 +21,8 @@
+ 
+ test.describe('Benchmark', () => {
+   // Generate the files for the benchmark
+-  test.beforeAll(async ({ request }) => {
+-    const content = galata.newContentsHelper(request);
++  test.beforeAll(async ({ baseURL, request }) => {
++    const content = galata.newContentsHelper(baseURL, undefined, request);
+     const codeContent = galata.Notebook.generateNotebook(300, 'code', [
+       'for x in range(OUTPUT_LENGTH):\n',
+       '    print(f"{PREFIX} {x}")'
+@@ -79,8 +79,8 @@
+   });
+ 
+   // Remove benchmark files
+-  test.afterAll(async ({ request }) => {
+-    const content = galata.newContentsHelper(request);
++  test.afterAll(async ({ baseURL, request }) => {
++    const content = galata.newContentsHelper(baseURL, undefined, request);
+     await content.deleteDirectory(tmpPath);
+   });
+ 
+@@ -112,30 +112,20 @@
+       const openTime = await perf.measure(async () => {
+         // Open the notebook and wait for the spinner
+         await Promise.all([
+-          page.locator('[role="main"] >> .jp-SpinnerContent').waitFor(),
++          page.waitForSelector('[role="main"] >> .jp-SpinnerContent'),
+           page.dblclick(`#filebrowser >> text=${file}`)
+         ]);
+ 
+         // Wait for spinner to be hidden
+-        await page
+-          .locator('[role="main"] >> .jp-SpinnerContent')
+-          .waitFor({ state: 'hidden' });
++        await page.waitForSelector('[role="main"] >> .jp-SpinnerContent', {
++          state: 'hidden'
++        });
+       });
+ 
+       // Check the notebook is correctly opened
+-      let panel = page.locator('[role="main"] >> .jp-NotebookPanel');
++      let panel = await page.$('[role="main"] >> .jp-NotebookPanel');
+       // Get only the document node to avoid noise from kernel and debugger in the toolbar
+-      let document = panel.locator('.jp-Notebook');
+-
+-      // Wait for the cell toolbar to be visible in code cell.
+-      if (file === codeNotebook) {
+-        await expect(
+-          page.locator(
+-            '.jp-Notebook .jp-Cell .jp-cell-toolbar:not(.jp-Toolbar-micro)'
+-          )
+-        ).toBeVisible();
+-      }
+-
++      let document = await panel.$('.jp-Notebook');
+       expect(await document.screenshot()).toMatchSnapshot(
+         `${file.replace('.', '-')}.png`
+       );
+@@ -150,21 +140,17 @@
+ 
+       // Shutdown the kernel to be sure it does not get in our way (especially for the close action)
+       await page.click('li[role="menuitem"]:has-text("Kernel")');
+-      await page.click(
+-        '.lm-Menu ul[role="menu"] >> text=Shut Down All Kernels…'
+-      );
+-      await page.click('button:has-text("Shut Down All") >> nth=-1'); // Click on the last matched button.
++      await page.click('ul[role="menu"] >> text=Shut Down All Kernels…');
++      await page.click(':nth-match(button:has-text("Shut Down All"), 3)');
+ 
+       // Open text file
+       const fromTime = await perf.measure(async () => {
+         await page.dblclick(`#filebrowser >> text=${textFile}`);
+-        await page
+-          .locator(
+-            `div[role="main"] >> .lm-DockPanel-tabBar >> text=${path.basename(
+-              textFile
+-            )}`
+-          )
+-          .waitFor();
++        await page.waitForSelector(
++          `div[role="main"] >> .lm-DockPanel-tabBar >> text=${path.basename(
++            textFile
++          )}`
++        );
+       });
+ 
+       let editorPanel = page.locator(
+@@ -188,6 +174,9 @@
+       });
+ 
+       // Check the notebook is correctly opened
++      panel = await page.$('[role="main"] >> .jp-NotebookPanel');
++      // Get only the document node to avoid noise from kernel and debugger in the toolbar
++      document = await panel.$('.jp-Notebook');
+       expect(await document.screenshot()).toMatchSnapshot(
+         `${file.replace('.', '-')}.png`
+       );
+@@ -203,7 +192,7 @@
+       // Close notebook
+       await page.click('li[role="menuitem"]:has-text("File")');
+       const closeTime = await perf.measure(async () => {
+-        await page.click('.lm-Menu ul[role="menu"] >> text=Close Tab');
++        await page.click('ul[role="menu"] >> text=Close Tab');
+         // Revert changes so we don't measure saving
+         const dimissButton = page.locator('button:has-text("Discard")');
+         if (await dimissButton.isVisible({ timeout: 50 })) {

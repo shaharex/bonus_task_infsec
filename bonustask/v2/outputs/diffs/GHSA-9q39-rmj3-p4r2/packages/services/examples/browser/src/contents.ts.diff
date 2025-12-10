@@ -1,0 +1,11 @@
+--- packages\services\examples\browser\src\contents.ts (old)
++++ packages\services\examples\browser\src\contents.ts (new)
+@@ -5,7 +5,7 @@
+ 
+ import { log } from './log';
+ 
+-export async function main(): Promise<void> {
++export async function main() {
+   const contents = new ContentsManager();
+ 
+   log('Create a new directory');

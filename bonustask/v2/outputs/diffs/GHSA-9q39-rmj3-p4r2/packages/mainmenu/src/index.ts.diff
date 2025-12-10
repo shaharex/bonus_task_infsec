@@ -1,0 +1,14 @@
+--- packages\mainmenu\src\index.ts (old)
++++ packages\mainmenu\src\index.ts (new)
+@@ -15,3 +15,11 @@
+ export * from './view';
+ export * from './tabs';
+ export * from './tokens';
++
++/**
++ * @deprecated since version 3.1
++ */
++export {
++  IRankedMenu as IJupyterLabMenu,
++  RankedMenu as JupyterLabMenu
++} from '@jupyterlab/ui-components';

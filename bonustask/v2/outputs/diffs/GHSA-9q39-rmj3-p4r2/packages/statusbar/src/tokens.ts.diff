@@ -1,0 +1,39 @@
+--- packages\statusbar\src\tokens.ts (old)
++++ packages\statusbar\src\tokens.ts (new)
+@@ -8,8 +8,7 @@
+ 
+ // tslint:disable-next-line:variable-name
+ export const IStatusBar = new Token<IStatusBar>(
+-  '@jupyterlab/statusbar:IStatusBar',
+-  'A service for the status bar on the application. Use this if you want to add new status bar items.'
++  '@jupyterlab/statusbar:IStatusBar'
+ );
+ 
+ /**
+@@ -19,10 +18,11 @@
+   /**
+    * Register a new status item.
+    *
+-   * @param id a unique id for the status item.
+-   * @param statusItem The options for how to add the status item.
++   * @param id - a unique id for the status item.
+    *
+-   * @returns an {@link IDisposable} that can be disposed to remove the item.
++   * @param options - The options for how to add the status item.
++   *
++   * @returns an `IDisposable` that can be disposed to remove the item.
+    */
+   registerStatusItem(id: string, statusItem: IStatusBar.IItem): IDisposable;
+ }
+@@ -55,11 +55,6 @@
+     rank?: number;
+ 
+     /**
+-     *  Displaying Items based on zoom priority -- higher zoom priority gets prioritised when zoom levels increase
+-     */
+-    priority?: number;
+-
+-    /**
+      * Whether the item is shown or hidden.
+      */
+     isActive?: () => boolean;

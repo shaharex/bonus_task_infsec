@@ -1,0 +1,10 @@
+--- packages\statusbar\src\index.ts (old)
++++ packages\statusbar\src\index.ts (new)
+@@ -8,5 +8,7 @@
+  */
+ 
+ export * from './components';
++export * from './defaults';
+ export * from './statusbar';
++export * from './style/statusbar';
+ export * from './tokens';

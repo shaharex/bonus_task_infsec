@@ -1,0 +1,11 @@
+--- packages\rendermime\src\mimemodel.ts (old)
++++ packages\rendermime\src\mimemodel.ts (new)
+@@ -93,7 +93,7 @@
+   /**
+    * A no-op callback function.
+    */
+-  export function noOp(): void {
++  export function noOp() {
+     /* no-op */
+   }
+ }

@@ -1,0 +1,20 @@
+--- buildutils\src\publish.ts (old)
++++ buildutils\src\publish.ts (new)
+@@ -3,7 +3,7 @@
+ | Distributed under the terms of the Modified BSD License.
+ |----------------------------------------------------------------------------*/
+ 
+-import { program as commander } from 'commander';
++import commander from 'commander';
+ import * as path from 'path';
+ import * as os from 'os';
+ import { handlePackage } from './update-dist-tag';
+@@ -30,7 +30,7 @@
+   .option('--yes', 'Publish without confirmation')
+   .option('--dry-run', 'Do not actually push any assets')
+   .action(async (options: any) => {
+-    utils.exitOnUncaughtException();
++    utils.exitOnUuncaughtException();
+ 
+     // No-op if we're in release helper dry run
+     if (process.env.RH_DRY_RUN === 'true') {

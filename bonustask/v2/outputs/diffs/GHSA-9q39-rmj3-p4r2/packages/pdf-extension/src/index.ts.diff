@@ -1,0 +1,24 @@
+--- packages\pdf-extension\src\index.ts (old)
++++ packages\pdf-extension\src\index.ts (new)
+@@ -108,7 +108,7 @@
+   /**
+    * Dispose of the resources held by the pdf widget.
+    */
+-  dispose(): void {
++  dispose() {
+     if (this._disposable) {
+       this._disposable.dispose();
+     }
+@@ -134,12 +134,10 @@
+ const extensions: IRenderMime.IExtension | IRenderMime.IExtension[] = [
+   {
+     id: '@jupyterlab/pdf-extension:factory',
+-    description: 'Adds renderer for PDF content.',
+     rendererFactory,
+     dataType: 'string',
+     documentWidgetFactoryOptions: {
+       name: 'PDF',
+-      // TODO: translate label
+       modelName: 'base64',
+       primaryFileType: 'PDF',
+       fileTypes: ['PDF'],

@@ -1,0 +1,11 @@
+ghsa_id,ecosystem,repo_url,source_code_location,vulnerable_version_old,vulnerable_version_new,patched_version_old,patched_version_new,git_diff_path,gumtree_diff_paths,localized_hunks,prompts_dir,advisory_text
+GHSA-7pq5-qcp6-mcww,,,,,,,,,,,/mnt/data/patch_localizer_outputs/prompts_GHSA-7pq5-qcp6-mcww,CKAN has an XSS vector in user uploaded images in group/org and user profiles
+GHSA-9q39-rmj3-p4r2,,,,,,,,,,,/mnt/data/patch_localizer_outputs/prompts_GHSA-9q39-rmj3-p4r2,HTML injection in Jupyter Notebook and JupyterLab leading to DOM Clobbering
+GHSA-r2hr-4v48-fjv3,,,,,,,,,,,/mnt/data/patch_localizer_outputs/prompts_GHSA-r2hr-4v48-fjv3,Nautobot's BANNER_* configuration can be used to inject arbitrary HTML content into Nautobot pages
+GHSA-jxgr-gcj5-cqqg,,,,,,,,,,,/mnt/data/patch_localizer_outputs/prompts_GHSA-jxgr-gcj5-cqqg,nautobot has reflected Cross-site Scripting potential in all object list views
+GHSA-v4xv-795h-rv4h,,,,,,,,,,,/mnt/data/patch_localizer_outputs/prompts_GHSA-v4xv-795h-rv4h,"XSS potential in rendered Markdown fields (comments, description, notes, etc.)"
+GHSA-cf9f-wmhp-v4pr,,,,,,,,,,,/mnt/data/patch_localizer_outputs/prompts_GHSA-cf9f-wmhp-v4pr,"Cross-site Scripting potential in custom links, job buttons, and computed fields"
+GHSA-5286-f2rf-35c2,,,,,,,,,,,/mnt/data/patch_localizer_outputs/prompts_GHSA-5286-f2rf-35c2,Wagtail vulnerable to stored Cross-site Scripting attack via ModelAdmin views
+GHSA-hwvq-6gjx-j797,,,,,,,,,,,/mnt/data/patch_localizer_outputs/prompts_GHSA-hwvq-6gjx-j797,Special Element Injection in notebook
+GHSA-wq5h-f9p5-q7fx,,,,,,,,,,,/mnt/data/patch_localizer_outputs/prompts_GHSA-wq5h-f9p5-q7fx,Improper validation of URLs ('Cross-site Scripting') in Wagtail rich text fields
+GHSA-2473-9hgq-j7xw,,,,,,,,,,,/mnt/data/patch_localizer_outputs/prompts_GHSA-2473-9hgq-j7xw,Cross-Site Scripting in Wagtail

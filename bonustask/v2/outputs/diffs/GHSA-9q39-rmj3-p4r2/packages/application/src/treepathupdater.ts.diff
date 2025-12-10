@@ -1,0 +1,12 @@
+--- packages\application\src\treepathupdater.ts (old)
++++ packages\application\src\treepathupdater.ts (new)
+@@ -9,8 +9,7 @@
+  * The tree path updater token.
+  */
+ export const ITreePathUpdater = new Token<ITreePathUpdater>(
+-  '@jupyterlab/application:ITreePathUpdater',
+-  'A service to update the tree path.'
++  '@jupyterlab/application:ITreePathUpdater'
+ );
+ 
+ /**

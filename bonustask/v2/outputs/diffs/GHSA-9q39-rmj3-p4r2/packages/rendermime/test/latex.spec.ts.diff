@@ -1,0 +1,11 @@
+--- packages\rendermime\test\latex.spec.ts (old)
++++ packages\rendermime\test\latex.spec.ts (new)
+@@ -1,7 +1,7 @@
+ // Copyright (c) Jupyter Development Team.
+ // Distributed under the terms of the Modified BSD License.
+ 
+-import { removeMath, replaceMath } from '@jupyterlab/rendermime';
++import { removeMath, replaceMath } from '../src';
+ 
+ describe('jupyter-ui', () => {
+   describe('removeMath()', () => {

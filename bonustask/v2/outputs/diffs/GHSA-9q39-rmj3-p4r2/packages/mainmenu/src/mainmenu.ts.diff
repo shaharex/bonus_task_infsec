@@ -1,0 +1,25 @@
+--- packages\mainmenu\src\mainmenu.ts (old)
++++ packages\mainmenu\src\mainmenu.ts (new)
+@@ -24,8 +24,7 @@
+    * Construct the main menu bar.
+    */
+   constructor(commands: CommandRegistry) {
+-    let options = { forceItemsPosition: { forceX: false, forceY: true } };
+-    super(options);
++    super({ forceItemsPosition: { forceX: false, forceY: true } });
+     this._commands = commands;
+   }
+ 
+@@ -144,11 +143,7 @@
+   /**
+    * Add a new menu to the main menu bar.
+    */
+-  addMenu(
+-    menu: Menu,
+-    update: boolean = true,
+-    options: IMainMenu.IAddOptions = {}
+-  ): void {
++  addMenu(menu: Menu, options: IMainMenu.IAddOptions = {}): void {
+     if (ArrayExt.firstIndexOf(this.menus, menu) > -1) {
+       return;
+     }

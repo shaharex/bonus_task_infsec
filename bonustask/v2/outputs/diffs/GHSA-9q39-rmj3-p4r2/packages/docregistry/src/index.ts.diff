@@ -1,0 +1,7 @@
+--- packages\docregistry\src\index.ts (old)
++++ packages\docregistry\src\index.ts (new)
+@@ -9,4 +9,3 @@
+ export * from './default';
+ export * from './mimedocument';
+ export * from './registry';
+-export * from './components';

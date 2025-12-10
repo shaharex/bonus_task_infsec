@@ -1,0 +1,142 @@
+--- packages\tooltip-extension\src\index.ts (old)
++++ packages\tooltip-extension\src\index.ts (new)
+@@ -17,8 +17,7 @@
+ import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
+ import { Kernel, KernelMessage, Session } from '@jupyterlab/services';
+ import { ITooltipManager, Tooltip } from '@jupyterlab/tooltip';
+-import { ITranslator, nullTranslator } from '@jupyterlab/translation';
+-import { find } from '@lumino/algorithm';
++import { find, toArray } from '@lumino/algorithm';
+ import { JSONObject } from '@lumino/coreutils';
+ import { Widget } from '@lumino/widgets';
+ 
+@@ -40,20 +39,13 @@
+  */
+ const manager: JupyterFrontEndPlugin<ITooltipManager> = {
+   id: '@jupyterlab/tooltip-extension:manager',
+-  description: 'Provides the tooltip manager.',
+   autoStart: true,
+-  optional: [ITranslator],
+   provides: ITooltipManager,
+-  activate: (
+-    app: JupyterFrontEnd,
+-    translator: ITranslator | null
+-  ): ITooltipManager => {
+-    const trans = (translator ?? nullTranslator).load('jupyterlab');
++  activate: (app: JupyterFrontEnd): ITooltipManager => {
+     let tooltip: Tooltip | null = null;
+ 
+     // Add tooltip dismiss command.
+     app.commands.addCommand(CommandIDs.dismiss, {
+-      label: trans.__('Dismiss the tooltip'),
+       execute: () => {
+         if (tooltip) {
+           tooltip.dispose();
+@@ -89,23 +81,16 @@
+  * The console tooltip plugin.
+  */
+ const consoles: JupyterFrontEndPlugin<void> = {
+-  // FIXME This should be in @jupyterlab/console-extension
+   id: '@jupyterlab/tooltip-extension:consoles',
+-  description: 'Adds the tooltip capability to consoles.',
+   autoStart: true,
+-  optional: [ITranslator],
+   requires: [ITooltipManager, IConsoleTracker],
+   activate: (
+     app: JupyterFrontEnd,
+     manager: ITooltipManager,
+-    consoles: IConsoleTracker,
+-    translator: ITranslator | null
++    consoles: IConsoleTracker
+   ): void => {
+-    const trans = (translator ?? nullTranslator).load('jupyterlab');
+-
+     // Add tooltip launch command.
+     app.commands.addCommand(CommandIDs.launchConsole, {
+-      label: trans.__('Open the tooltip'),
+       execute: () => {
+         const parent = consoles.currentWidget;
+ 
+@@ -131,23 +116,16 @@
+  * The notebook tooltip plugin.
+  */
+ const notebooks: JupyterFrontEndPlugin<void> = {
+-  // FIXME This should be in @jupyterlab/notebook-extension
+   id: '@jupyterlab/tooltip-extension:notebooks',
+-  description: 'Adds the tooltip capability to notebooks.',
+   autoStart: true,
+-  optional: [ITranslator],
+   requires: [ITooltipManager, INotebookTracker],
+   activate: (
+     app: JupyterFrontEnd,
+     manager: ITooltipManager,
+-    notebooks: INotebookTracker,
+-    translator: ITranslator | null
++    notebooks: INotebookTracker
+   ): void => {
+-    const trans = (translator ?? nullTranslator).load('jupyterlab');
+-
+     // Add tooltip launch command.
+     app.commands.addCommand(CommandIDs.launchNotebook, {
+-      label: trans.__('Open the tooltip'),
+       execute: () => {
+         const parent = notebooks.currentWidget;
+ 
+@@ -173,21 +151,15 @@
+  * The file editor tooltip plugin.
+  */
+ const files: JupyterFrontEndPlugin<void> = {
+-  // FIXME This should be in @jupyterlab/fileeditor-extension
+   id: '@jupyterlab/tooltip-extension:files',
+-  description: 'Adds the tooltip capability to file editors.',
+   autoStart: true,
+-  optional: [ITranslator],
+   requires: [ITooltipManager, IEditorTracker, IRenderMimeRegistry],
+   activate: (
+     app: JupyterFrontEnd,
+     manager: ITooltipManager,
+     editorTracker: IEditorTracker,
+-    rendermime: IRenderMimeRegistry,
+-    translator: ITranslator | null
++    rendermime: IRenderMimeRegistry
+   ): void => {
+-    const trans = (translator ?? nullTranslator).load('jupyterlab');
+-
+     // Keep a list of active ISessions so that we can
+     // clean them up when they are no longer needed.
+     const activeSessions: {
+@@ -200,7 +172,7 @@
+     // matching path for the file editors.
+     const onRunningChanged = (
+       sender: Session.IManager,
+-      models: Iterable<Session.IModel>
++      models: Session.IModel[]
+     ) => {
+       editorTracker.forEach(file => {
+         const model = find(models, m => file.context.path === m.path);
+@@ -228,7 +200,7 @@
+         }
+       });
+     };
+-    onRunningChanged(sessions, sessions.running());
++    onRunningChanged(sessions, toArray(sessions.running()));
+     sessions.runningChanged.connect(onRunningChanged);
+ 
+     // Clean up after a widget when it is disposed
+@@ -244,7 +216,6 @@
+ 
+     // Add tooltip launch command.
+     app.commands.addCommand(CommandIDs.launchFile, {
+-      label: trans.__('Open the tooltip'),
+       execute: async () => {
+         const parent = editorTracker.currentWidget;
+         const kernel =
+@@ -312,7 +283,7 @@
+    */
+   export function fetch(options: IFetchOptions): Promise<JSONObject> {
+     const { detail, editor, kernel } = options;
+-    const code = editor.model.sharedModel.getSource();
++    const code = editor.model.value.text;
+     const position = editor.getCursorPosition();
+     const offset = Text.jsIndexToCharIndex(editor.getOffsetAt(position), code);
+ 

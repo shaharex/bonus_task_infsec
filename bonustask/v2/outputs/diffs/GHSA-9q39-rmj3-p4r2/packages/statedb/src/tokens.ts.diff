@@ -1,0 +1,21 @@
+--- packages\statedb\src\tokens.ts (old)
++++ packages\statedb\src\tokens.ts (new)
+@@ -4,15 +4,12 @@
+ import { ReadonlyPartialJSONValue, Token } from '@lumino/coreutils';
+ import { IDataConnector } from './interfaces';
+ 
++/* tslint:disable */
+ /**
+  * The default state database token.
+  */
+-export const IStateDB = new Token<IStateDB>(
+-  '@jupyterlab/coreutils:IStateDB',
+-  `A service for the JupyterLab state database.
+-  Use this if you want to store data that will persist across page loads.
+-  See "state database" for more information.`
+-);
++export const IStateDB = new Token<IStateDB>('@jupyterlab/coreutils:IStateDB');
++/* tslint:enable */
+ 
+ /**
+  * The description of a state database.

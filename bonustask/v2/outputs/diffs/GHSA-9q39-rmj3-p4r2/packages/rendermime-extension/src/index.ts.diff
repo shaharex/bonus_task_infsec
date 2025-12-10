@@ -1,0 +1,115 @@
+--- packages\rendermime-extension\src\index.ts (old)
++++ packages\rendermime-extension\src\index.ts (new)
+@@ -15,13 +15,11 @@
+ import { IDocumentManager } from '@jupyterlab/docmanager';
+ import {
+   ILatexTypesetter,
+-  IMarkdownParser,
+-  IRenderMime,
+   IRenderMimeRegistry,
+   RenderMimeRegistry,
+   standardRendererFactories
+ } from '@jupyterlab/rendermime';
+-import { ITranslator, nullTranslator } from '@jupyterlab/translation';
++import { ITranslator } from '@jupyterlab/translation';
+ 
+ namespace CommandIDs {
+   export const handleLink = 'rendermime:handle-local-link';
+@@ -32,14 +30,8 @@
+  */
+ const plugin: JupyterFrontEndPlugin<IRenderMimeRegistry> = {
+   id: '@jupyterlab/rendermime-extension:plugin',
+-  description: 'Provides the render mime registry.',
+-  optional: [
+-    IDocumentManager,
+-    ILatexTypesetter,
+-    ISanitizer,
+-    IMarkdownParser,
+-    ITranslator
+-  ],
++  requires: [ITranslator],
++  optional: [IDocumentManager, ILatexTypesetter, ISanitizer],
+   provides: IRenderMimeRegistry,
+   activate: activate,
+   autoStart: true
+@@ -50,40 +42,25 @@
+  */
+ export default plugin;
+ 
+-const DEBUGGER_OPEN_SOURCE = 'debugger:open-source';
+-
+ /**
+  * Activate the rendermine plugin.
+  */
+ function activate(
+   app: JupyterFrontEnd,
++  translator: ITranslator,
+   docManager: IDocumentManager | null,
+   latexTypesetter: ILatexTypesetter | null,
+-  sanitizer: IRenderMime.ISanitizer | null,
+-  markdownParser: IMarkdownParser | null,
+-  translator: ITranslator | null
++  sanitizer: ISanitizer | null
+ ): RenderMimeRegistry {
+-  const trans = (translator ?? nullTranslator).load('jupyterlab');
++  const trans = translator.load('jupyterlab');
+   if (docManager) {
+     app.commands.addCommand(CommandIDs.handleLink, {
+       label: trans.__('Handle Local Link'),
+       execute: args => {
+         const path = args['path'] as string | undefined | null;
+         const id = args['id'] as string | undefined | null;
+-        const scope = (args['scope'] as string | undefined | null) || 'server';
+         if (!path) {
+           return;
+-        }
+-        if (scope === 'kernel') {
+-          // Note: using a command instead of requiring
+-          // `IDebuggerSourceViewer` to avoid a dependency cycle.
+-          if (!app.commands.hasCommand(DEBUGGER_OPEN_SOURCE)) {
+-            console.warn(
+-              'Cannot open kernel file: debugger sources provider not available'
+-            );
+-            return;
+-          }
+-          return app.commands.execute(DEBUGGER_OPEN_SOURCE, { path });
+         }
+         // First check if the path exists on the server.
+         return docManager.services.contents
+@@ -91,8 +68,9 @@
+           .then(() => {
+             // Open the link with the default rendered widget factory,
+             // if applicable.
+-            const factory =
+-              docManager.registry.defaultRenderedWidgetFactory(path);
++            const factory = docManager.registry.defaultRenderedWidgetFactory(
++              path
++            );
+             const widget = docManager.openOrReveal(path, factory.name);
+ 
+             // Handle the hash if one has been provided.
+@@ -118,23 +96,10 @@
+               path,
+               id
+             });
+-          },
+-          handlePath: (
+-            node: HTMLElement,
+-            path: string,
+-            scope: 'kernel' | 'server',
+-            id?: string
+-          ) => {
+-            app.commandLinker.connectNode(node, CommandIDs.handleLink, {
+-              path,
+-              id,
+-              scope
+-            });
+           }
+         },
+     latexTypesetter: latexTypesetter ?? undefined,
+-    markdownParser: markdownParser ?? undefined,
+-    translator: translator ?? undefined,
++    translator: translator,
+     sanitizer: sanitizer ?? undefined
+   });
+ }

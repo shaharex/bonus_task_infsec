@@ -1,0 +1,29 @@
+--- buildutils\src\bump-js-major.ts (old)
++++ buildutils\src\bump-js-major.ts (new)
+@@ -3,7 +3,7 @@
+ | Distributed under the terms of the Modified BSD License.
+ |----------------------------------------------------------------------------*/
+ 
+-import { program as commander } from 'commander';
++import commander from 'commander';
+ import semver from 'semver';
+ import path from 'path';
+ import * as utils from './utils';
+@@ -36,7 +36,7 @@
+   .option('--force', 'Force the upgrade')
+   .option('--dry-run', 'Show what would be executed')
+   .action((pkg: string, others: Array<string>, options: any) => {
+-    utils.exitOnUncaughtException();
++    utils.exitOnUuncaughtException();
+     others.push(pkg);
+     const toBump: Set<string> = new Set();
+     const ignoreBump: Set<string> = new Set();
+@@ -65,7 +65,7 @@
+     });
+ 
+     // Look for dependencies of bumped packages
+-    toBump.forEach(val => {
++    Array.from(toBump).forEach(val => {
+       const deps = getDeps(val, lut);
+       deps.forEach(dep => {
+         maybeBump(dep);

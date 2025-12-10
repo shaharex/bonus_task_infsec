@@ -1,0 +1,94 @@
+--- packages\hub-extension\src\index.ts (old)
++++ packages\hub-extension\src\index.ts (new)
+@@ -11,8 +11,7 @@
+   ConnectionLost,
+   IConnectionLost,
+   JupyterFrontEnd,
+-  JupyterFrontEndPlugin,
+-  JupyterLab
++  JupyterFrontEndPlugin
+ } from '@jupyterlab/application';
+ import { Dialog, ICommandPalette, showDialog } from '@jupyterlab/apputils';
+ import { URLExt } from '@jupyterlab/coreutils';
+@@ -58,7 +57,7 @@
+ 
+   // If hubServerName is set, use JupyterHub 1.0 URL.
+   const spawnBase = URLExt.join(hubPrefix, 'spawn');
+-  let restartUrl = hubHost + spawnBase;
++  let restartUrl: string;
+   if (hubServerName) {
+     const suffix = URLExt.join(spawnBase, hubUser, hubServerName);
+     if (!suffix.startsWith(spawnBase)) {
+@@ -66,6 +65,7 @@
+     }
+     restartUrl = hubHost + suffix;
+   }
++  restartUrl = hubHost + spawnBase;
+ 
+   const { commands } = app;
+ 
+@@ -106,8 +106,7 @@
+  */
+ const hubExtension: JupyterFrontEndPlugin<void> = {
+   activate: activateHubExtension,
+-  id: '@jupyterlab/hub-extension:plugin',
+-  description: 'Registers commands related to the hub server',
++  id: 'jupyter.extensions.hub-extension',
+   requires: [JupyterFrontEnd.IPaths, ITranslator],
+   optional: [ICommandPalette],
+   autoStart: true
+@@ -118,8 +117,7 @@
+  */
+ const hubExtensionMenu: JupyterFrontEndPlugin<void> = {
+   activate: () => void 0,
+-  id: '@jupyterlab/hub-extension:menu',
+-  description: 'Adds hub related commands to the menu.',
++  id: 'jupyter.extensions.hub-extension:plugin',
+   autoStart: true
+ };
+ 
+@@ -132,16 +130,12 @@
+  * Otherwise, it shows an error dialog.
+  */
+ const connectionlost: JupyterFrontEndPlugin<IConnectionLost> = {
+-  id: '@jupyterlab/hub-extension:connectionlost',
+-  description:
+-    'Provides a service to be notified when the connection to the hub server is lost.',
++  id: '@jupyterlab/apputils-extension:connectionlost',
+   requires: [JupyterFrontEnd.IPaths, ITranslator],
+-  optional: [JupyterLab.IInfo],
+   activate: (
+     app: JupyterFrontEnd,
+     paths: JupyterFrontEnd.IPaths,
+-    translator: ITranslator,
+-    info: JupyterLab.IInfo | null
++    translator: ITranslator
+   ): IConnectionLost => {
+     const trans = translator.load('jupyterlab');
+     const hubPrefix = paths.urls.hubPrefix || '';
+@@ -162,12 +156,7 @@
+       if (showingError) {
+         return;
+       }
+-
+       showingError = true;
+-      if (info) {
+-        info.isConnected = false;
+-      }
+-
+       const result = await showDialog({
+         title: trans.__('Server unavailable or unreachable'),
+         body: trans.__(
+@@ -179,12 +168,7 @@
+           Dialog.cancelButton({ label: trans.__('Dismiss') })
+         ]
+       });
+-
+-      if (info) {
+-        info.isConnected = true;
+-      }
+       showingError = false;
+-
+       if (result.button.accept) {
+         await app.commands.execute(CommandIDs.restart);
+       }

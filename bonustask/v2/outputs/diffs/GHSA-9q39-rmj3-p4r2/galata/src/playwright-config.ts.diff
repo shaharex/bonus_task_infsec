@@ -1,0 +1,22 @@
+--- galata\src\playwright-config.ts (old)
++++ galata\src\playwright-config.ts (new)
+@@ -5,10 +5,7 @@
+ 
+ // Default Playwright configuration for JupyterLab
+ module.exports = {
+-  reporter: [
+-    [process.env.CI ? 'github' : 'list'],
+-    ['html', { open: process.env.CI ? 'never' : 'on-failure' }]
+-  ],
++  reporter: [[process.env.CI ? 'dot' : 'list'], ['html']],
+   reportSlowTests: null,
+   timeout: 60000,
+   use: {
+@@ -20,7 +17,6 @@
+     viewport: { width: 1024, height: 768 },
+ 
+     // Artifacts
+-    trace: 'on-first-retry',
+     video: 'retain-on-failure'
+   }
+ } as PlaywrightTestConfig;

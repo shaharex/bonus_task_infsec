@@ -1,0 +1,58 @@
+--- packages\docregistry\src\mimedocument.ts (old)
++++ packages\docregistry\src\mimedocument.ts (new)
+@@ -2,7 +2,6 @@
+ // Distributed under the terms of the Modified BSD License.
+ 
+ import { Printing, showErrorMessage } from '@jupyterlab/apputils';
+-import { IEditorMimeTypeService } from '@jupyterlab/codeeditor';
+ import { ActivityMonitor } from '@jupyterlab/coreutils';
+ import {
+   IRenderMime,
+@@ -82,7 +81,7 @@
+   /**
+    * Print method. Deferred to the renderer.
+    */
+-  [Printing.symbol](): Printing.OptionalAsyncThunk {
++  [Printing.symbol]() {
+     return Printing.getPrintFunction(this.renderer);
+   }
+ 
+@@ -96,7 +95,7 @@
+   /**
+    * Set URI fragment identifier.
+    */
+-  setFragment(fragment: string): void {
++  setFragment(fragment: string) {
+     this._fragment = fragment;
+     this.update();
+   }
+@@ -284,9 +283,7 @@
+    */
+   protected createNewWidget(context: DocumentRegistry.Context): MimeDocument {
+     const ft = this._fileType;
+-    const mimeType = ft?.mimeTypes.length
+-      ? ft.mimeTypes[0]
+-      : IEditorMimeTypeService.defaultMimeType;
++    const mimeType = ft?.mimeTypes.length ? ft.mimeTypes[0] : 'text/plain';
+ 
+     const rendermime = this._rendermime.clone({
+       resolver: context.urlResolver
+@@ -299,8 +296,7 @@
+         resolver: rendermime.resolver,
+         sanitizer: rendermime.sanitizer,
+         linkHandler: rendermime.linkHandler,
+-        latexTypesetter: rendermime.latexTypesetter,
+-        markdownParser: rendermime.markdownParser
++        latexTypesetter: rendermime.latexTypesetter
+       });
+     } else {
+       renderer = rendermime.createRenderer(mimeType);
+@@ -314,7 +310,7 @@
+       dataType: this._dataType
+     });
+ 
+-    content.title.icon = ft?.icon;
++    content.title.icon = ft?.icon!;
+     content.title.iconClass = ft?.iconClass ?? '';
+     content.title.iconLabel = ft?.iconLabel ?? '';
+ 

@@ -1,0 +1,11 @@
+--- packages\rendermime\src\attachmentmodel.ts (old)
++++ packages\rendermime\src\attachmentmodel.ts (new)
+@@ -173,7 +173,7 @@
+   /**
+    * Get the data for an attachment.
+    *
+-   * @param bundle - A kernel attachment MIME bundle.
++   * @params bundle - A kernel attachment MIME bundle.
+    *
+    * @returns - The data for the payload.
+    */

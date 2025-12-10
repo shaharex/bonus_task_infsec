@@ -1,0 +1,138 @@
+--- packages\codemirror\src\factory.ts (old)
++++ packages\codemirror\src\factory.ts (new)
+@@ -3,16 +3,7 @@
+ 
+ import { CodeEditor, IEditorFactoryService } from '@jupyterlab/codeeditor';
+ import { ITranslator, nullTranslator } from '@jupyterlab/translation';
+-import { EditorView, keymap } from '@codemirror/view';
+-import { EditorExtensionRegistry } from './extension';
+ import { CodeMirrorEditor } from './editor';
+-import { EditorLanguageRegistry } from './language';
+-import {
+-  IEditorExtensionFactory,
+-  IEditorExtensionRegistry,
+-  IEditorFactoryOptions,
+-  IEditorLanguageRegistry
+-} from './token';
+ 
+ /**
+  * CodeMirror editor factory.
+@@ -21,79 +12,68 @@
+   /**
+    * Construct an IEditorFactoryService for CodeMirrorEditors.
+    */
+-  constructor(options: IEditorFactoryOptions = {}) {
+-    this.languages = options.languages ?? new EditorLanguageRegistry();
+-    this.extensions = options.extensions ?? new EditorExtensionRegistry();
+-    this.translator = options.translator ?? nullTranslator;
++  constructor(
++    defaults: Partial<CodeMirrorEditor.IConfig> = {},
++    translator?: ITranslator
++  ) {
++    this.translator = translator || nullTranslator;
+     this.inlineCodeMirrorConfig = {
+-      searchWithCM: true
++      ...CodeMirrorEditor.defaultConfig,
++      extraKeys: {
++        'Cmd-Right': 'goLineRight',
++        End: 'goLineRight',
++        'Cmd-Left': 'goLineLeft',
++        Tab: 'indentMoreOrinsertTab',
++        'Shift-Tab': 'indentLess',
++        'Cmd-/': cm => cm.toggleComment({ indent: true }),
++        'Ctrl-/': cm => cm.toggleComment({ indent: true }),
++        'Ctrl-G': 'find',
++        'Cmd-G': 'find'
++      },
++      ...defaults
+     };
+     this.documentCodeMirrorConfig = {
++      ...CodeMirrorEditor.defaultConfig,
++      extraKeys: {
++        Tab: 'indentMoreOrinsertTab',
++        'Shift-Tab': 'indentLess',
++        'Cmd-/': cm => cm.toggleComment({ indent: true }),
++        'Ctrl-/': cm => cm.toggleComment({ indent: true }),
++        'Shift-Enter': () => {
++          /* no-op */
++        }
++      },
+       lineNumbers: true,
+-      scrollPastEnd: true
++      scrollPastEnd: true,
++      ...defaults
+     };
+   }
+ 
+   /**
+    * Create a new editor for inline code.
+    */
+-  readonly newInlineEditor = (
+-    options: CodeEditor.IOptions
+-  ): CodeMirrorEditor => {
++  newInlineEditor = (options: CodeEditor.IOptions) => {
+     options.host.dataset.type = 'inline';
+-    return this.newEditor({
++    return new CodeMirrorEditor({
+       ...options,
+       config: { ...this.inlineCodeMirrorConfig, ...(options.config || {}) },
+-      inline: true
++      translator: this.translator
+     });
+   };
+ 
+   /**
+    * Create a new editor for a full document.
+    */
+-  readonly newDocumentEditor = (
+-    options: CodeEditor.IOptions
+-  ): CodeMirrorEditor => {
++  newDocumentEditor = (options: CodeEditor.IOptions) => {
+     options.host.dataset.type = 'document';
+-    return this.newEditor({
++    return new CodeMirrorEditor({
+       ...options,
+-      config: { ...this.documentCodeMirrorConfig, ...(options.config ?? {}) },
+-      inline: false,
+-      extensions: [
+-        keymap.of([
+-          {
+-            key: 'Shift-Enter',
+-            run: (target: EditorView) => {
+-              return true;
+-            }
+-          }
+-        ])
+-      ].concat(options.extensions ?? [])
++      config: { ...this.documentCodeMirrorConfig, ...(options.config || {}) },
++      translator: this.translator
+     });
+   };
+ 
+-  /**
+-   * Create a new editor
+-   *
+-   * @param options Editor options
+-   * @returns The editor
+-   */
+-  protected newEditor(
+-    options: CodeEditor.IOptions & IEditorExtensionFactory.IOptions
+-  ): CodeMirrorEditor {
+-    const editor = new CodeMirrorEditor({
+-      extensionsRegistry: this.extensions,
+-      languages: this.languages,
+-      translator: this.translator,
+-      ...options
+-    });
+-
+-    return editor;
+-  }
+-
+-  protected extensions: IEditorExtensionRegistry;
+-  protected languages: IEditorLanguageRegistry;
+   protected translator: ITranslator;
+-  protected inlineCodeMirrorConfig: Record<string, any>;
+-  protected documentCodeMirrorConfig: Record<string, any>;
++  protected inlineCodeMirrorConfig: Partial<CodeMirrorEditor.IConfig>;
++  protected documentCodeMirrorConfig: Partial<CodeMirrorEditor.IConfig>;
+ }

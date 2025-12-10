@@ -1,0 +1,19 @@
+--- packages\logconsole\src\registry.ts (old)
++++ packages\logconsole\src\registry.ts (new)
+@@ -76,14 +76,14 @@
+   /**
+    * Whether the register is disposed.
+    */
+-  get isDisposed(): boolean {
++  get isDisposed() {
+     return this._isDisposed;
+   }
+ 
+   /**
+    * Dispose the registry and all loggers.
+    */
+-  dispose(): void {
++  dispose() {
+     if (this.isDisposed) {
+       return;
+     }

@@ -1,0 +1,44 @@
+--- packages\codemirror\src\index.ts (old)
++++ packages\codemirror\src\index.ts (new)
+@@ -5,14 +5,33 @@
+  * @module codemirror
+  */
+ 
+-export * from './commands';
++import { IEditorServices } from '@jupyterlab/codeeditor';
++import { CodeMirrorEditorFactory } from './factory';
++import { CodeMirrorMimeTypeService } from './mimetype';
++
+ export * from './editor';
+-export * from './extension';
+-export * from './extensions';
+ export * from './factory';
+-export * from './language';
+ export * from './mimetype';
+-export * from './searchprovider';
+-export * from './theme';
+-export * from './token';
+-export * from './pythonBuiltin';
++export * from './mode';
++export * from './syntaxstatus';
++export * from './tokens';
++
++/**
++ * The default editor services.
++ */
++export const editorServices: IEditorServices = {
++  factoryService: new CodeMirrorEditorFactory(),
++  mimeTypeService: new CodeMirrorMimeTypeService()
++};
++
++/**
++ * FIXME-TRANS: Maybe an option to be able to pass a translator to the factories?
++ *
++
++export function getEditorServices(translator: ITranslator): IEditorServices {
++  return {
++    factoryService: new CodeMirrorEditorFactory({}, translator),
++    mimeTypeService: new CodeMirrorMimeTypeService(translator)
++  };
++}
++ */

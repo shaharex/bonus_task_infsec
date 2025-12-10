@@ -1,0 +1,37 @@
+--- galata\test\jupyterlab\save.test.ts (old)
++++ galata\test\jupyterlab\save.test.ts (new)
+@@ -16,9 +16,9 @@
+       type === 'Notebook' ? `File>New>${type}` : `File>New>${type} File`
+     );
+ 
+-    await page
+-      .locator(`[role="main"] >> text=${DEFAULT_NAME}${EXTENSION[type]}`)
+-      .waitFor();
++    await page.waitForSelector(
++      `[role="main"] >> text=${DEFAULT_NAME}${EXTENSION[type]}`
++    );
+ 
+     if (type === 'Notebook') {
+       // Select the kernel
+@@ -29,7 +29,7 @@
+       type === 'Markdown' ? `File>Save ${type} File` : `File>Save ${type}`
+     );
+ 
+-    await page.locator('.jp-Dialog >> text=Rename file').waitFor();
++    await page.waitForSelector('.jp-Dialog >> text=Rename file');
+ 
+     await expect(
+       page.locator('.jp-Dialog >> input[placeholder="File name"]')
+@@ -51,9 +51,9 @@
+       type === 'Notebook' ? `File>New>${type}` : `File>New>${type} File`
+     );
+ 
+-    await page
+-      .locator(`[role="main"] >> text=${DEFAULT_NAME}${EXTENSION[type]}`)
+-      .waitFor();
++    await page.waitForSelector(
++      `[role="main"] >> text=${DEFAULT_NAME}${EXTENSION[type]}`
++    );
+ 
+     if (type === 'Notebook') {
+       // Select the kernel

@@ -1,0 +1,7 @@
+--- jupyterlab\labhubapp.py (old)
++++ jupyterlab\labhubapp.py (new)
+@@ -1,3 +1,4 @@
++# coding: utf-8
+ """A JupyterHub EntryPoint that defaults to use JupyterLab"""
+ 
+ # Copyright (c) Jupyter Development Team.

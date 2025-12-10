@@ -1,0 +1,15 @@
+--- packages\observables\test\modeldb.spec.ts (old)
++++ packages\observables\test\modeldb.spec.ts (new)
+@@ -143,9 +143,9 @@
+     });
+ 
+     describe('#connected', () => {
+-      it('should resolve immediately for an in-memory database', async () => {
+-        const db = new ModelDB();
+-        await expect(db.connected).resolves.not.toThrow();
++      it('should resolve immediately for an in-memory database', () => {
++        const db = new ModelDB();
++        return db.connected;
+       });
+     });
+ 

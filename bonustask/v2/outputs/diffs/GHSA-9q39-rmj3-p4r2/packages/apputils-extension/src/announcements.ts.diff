@@ -1,0 +1,38 @@
+--- packages\apputils-extension\src\announcements.ts (old)
++++ packages\apputils-extension\src\announcements.ts (new)
+@@ -1,8 +1,3 @@
+-/*
+- * Copyright (c) Jupyter Development Team.
+- * Distributed under the terms of the Modified BSD License.
+- */
+-
+ import {
+   JupyterFrontEnd,
+   JupyterFrontEndPlugin
+@@ -17,7 +12,7 @@
+ const NEWS_API_URL = '/lab/api/news';
+ const UPDATE_API_URL = '/lab/api/update';
+ const PRIVACY_URL =
+-  'https://jupyterlab.readthedocs.io/en/stable/privacy_policies.html';
++  'https://jupyterlab.readthedocs.io/en/3.6.x/privacy_policies.html';
+ 
+ /**
+  * Call the announcement API
+@@ -52,8 +47,6 @@
+ 
+ export const announcements: JupyterFrontEndPlugin<void> = {
+   id: '@jupyterlab/apputils-extension:announcements',
+-  description:
+-    'Add the announcement feature. It will fetch news on the internet and check for application updates.',
+   autoStart: true,
+   optional: [ISettingRegistry, ITranslator],
+   activate: (
+@@ -100,7 +93,7 @@
+       if (mustFetchNews === 'none') {
+         const notificationId = Notification.emit(
+           trans.__(
+-            'Would you like to get notified about official Jupyter news?'
++            'Would you like to receive official Jupyter news?\nPlease read the privacy policy.'
+           ),
+           'default',
+           {

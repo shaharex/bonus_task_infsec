@@ -1,0 +1,58 @@
+--- packages\services\test\terminal\terminal.spec.ts (old)
++++ packages\services\test\terminal\terminal.spec.ts (new)
+@@ -2,7 +2,7 @@
+ // Distributed under the terms of the Modified BSD License.
+ 
+ import { PageConfig } from '@jupyterlab/coreutils';
+-import { JupyterServer, testEmission } from '@jupyterlab/testing';
++import { JupyterServer, testEmission } from '@jupyterlab/testutils';
+ import { Terminal, TerminalManager } from '../../src';
+ import { handleRequest } from '../utils';
+ 
+@@ -10,7 +10,7 @@
+ 
+ beforeAll(async () => {
+   await server.start();
+-}, 30000);
++});
+ 
+ afterAll(async () => {
+   await server.shutdown();
+@@ -50,7 +50,7 @@
+           }
+         });
+         session.send({ type: 'stdin', content: ['cd\r'] });
+-        await expect(emission).resolves.not.toThrow();
++        await emission;
+       });
+     });
+ 
+@@ -99,10 +99,8 @@
+     });
+ 
+     describe('#send()', () => {
+-      it('should send a message to the socket', () => {
+-        expect(() => {
+-          session.send({ type: 'stdin', content: [1, 2] });
+-        }).not.toThrow();
++      it('should send a message to the socket', async () => {
++        session.send({ type: 'stdin', content: [1, 2] });
+       });
+     });
+ 
+@@ -119,12 +117,12 @@
+     describe('#shutdown()', () => {
+       it('should shut down the terminal session', async () => {
+         session = await manager.startNew();
+-        await expect(session.shutdown()).resolves.not.toThrow();
++        await session.shutdown();
+       });
+ 
+-      it('should handle a 404 status', async () => {
++      it('should handle a 404 status', () => {
+         handleRequest(defaultSession, 404, {});
+-        await expect(defaultSession.shutdown()).resolves.not.toThrow();
++        return defaultSession.shutdown();
+       });
+     });
+   });

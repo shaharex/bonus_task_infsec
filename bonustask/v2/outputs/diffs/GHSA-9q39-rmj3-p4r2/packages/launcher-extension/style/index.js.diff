@@ -1,0 +1,10 @@
+--- packages\launcher-extension\style\index.js (old)
++++ packages\launcher-extension\style\index.js (new)
+@@ -8,7 +8,4 @@
+ import '@jupyterlab/ui-components/style/index.js';
+ import '@jupyterlab/apputils/style/index.js';
+ import '@jupyterlab/application/style/index.js';
+-import '@jupyterlab/filebrowser/style/index.js';
+ import '@jupyterlab/launcher/style/index.js';
+-
+-import './base.css';

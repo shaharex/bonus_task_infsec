@@ -1,0 +1,12 @@
+--- examples\federated\core_package\webpack.config.js (old)
++++ examples\federated\core_package\webpack.config.js (new)
+@@ -189,7 +189,8 @@
+         type: 'var',
+         name: ['_JUPYTERLAB', 'CORE_OUTPUT']
+       },
+-      filename: 'bundle.js'
++      filename: 'bundle.js',
++      hashFunction: 'sha256'
+     },
+     optimization: {
+       splitChunks: {

@@ -1,0 +1,80 @@
+--- packages\markdownviewer-extension\src\index.ts (old)
++++ packages\markdownviewer-extension\src\index.ts (new)
+@@ -10,22 +10,19 @@
+   JupyterFrontEnd,
+   JupyterFrontEndPlugin
+ } from '@jupyterlab/application';
+-import { ISanitizer, WidgetTracker } from '@jupyterlab/apputils';
++import { WidgetTracker } from '@jupyterlab/apputils';
+ import { PathExt } from '@jupyterlab/coreutils';
+ import {
+   IMarkdownViewerTracker,
+   MarkdownDocument,
+   MarkdownViewer,
+-  MarkdownViewerFactory,
+-  MarkdownViewerTableOfContentsFactory
++  MarkdownViewerFactory
+ } from '@jupyterlab/markdownviewer';
+ import {
+-  IRenderMime,
+   IRenderMimeRegistry,
+   markdownRendererFactory
+ } from '@jupyterlab/rendermime';
+ import { ISettingRegistry } from '@jupyterlab/settingregistry';
+-import { ITableOfContentsRegistry } from '@jupyterlab/toc';
+ import { ITranslator } from '@jupyterlab/translation';
+ 
+ /**
+@@ -47,15 +44,9 @@
+ const plugin: JupyterFrontEndPlugin<IMarkdownViewerTracker> = {
+   activate,
+   id: '@jupyterlab/markdownviewer-extension:plugin',
+-  description: 'Adds markdown file viewer and provides its tracker.',
+   provides: IMarkdownViewerTracker,
+   requires: [IRenderMimeRegistry, ITranslator],
+-  optional: [
+-    ILayoutRestorer,
+-    ISettingRegistry,
+-    ITableOfContentsRegistry,
+-    ISanitizer
+-  ],
++  optional: [ILayoutRestorer, ISettingRegistry],
+   autoStart: true
+ };
+ 
+@@ -67,9 +58,7 @@
+   rendermime: IRenderMimeRegistry,
+   translator: ITranslator,
+   restorer: ILayoutRestorer | null,
+-  settingRegistry: ISettingRegistry | null,
+-  tocRegistry: ITableOfContentsRegistry | null,
+-  sanitizer: IRenderMime.ISanitizer | null
++  settingRegistry: ISettingRegistry | null
+ ): IMarkdownViewerTracker {
+   const trans = translator.load('jupyterlab');
+   const { commands, docRegistry } = app;
+@@ -121,7 +110,6 @@
+   const factory = new MarkdownViewerFactory({
+     rendermime,
+     name: FACTORY,
+-    label: trans.__('Markdown Preview'),
+     primaryFileType: docRegistry.getFileType('markdown'),
+     fileTypes: ['markdown'],
+     defaultRendered: ['markdown']
+@@ -185,16 +173,6 @@
+     label: trans.__('Show Markdown Editor')
+   });
+ 
+-  if (tocRegistry) {
+-    tocRegistry.add(
+-      new MarkdownViewerTableOfContentsFactory(
+-        tracker,
+-        rendermime.markdownParser,
+-        sanitizer ?? rendermime.sanitizer
+-      )
+-    );
+-  }
+-
+   return tracker;
+ }
+ 

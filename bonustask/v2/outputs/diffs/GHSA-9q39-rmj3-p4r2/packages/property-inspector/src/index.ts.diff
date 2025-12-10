@@ -1,0 +1,89 @@
+--- packages\property-inspector\src\index.ts (old)
++++ packages\property-inspector\src\index.ts (new)
+@@ -6,12 +6,12 @@
+  */
+ 
+ import { ILabShell } from '@jupyterlab/application';
++import { ReactWidget } from '@jupyterlab/apputils';
+ import {
+   ITranslator,
+   nullTranslator,
+   TranslationBundle
+ } from '@jupyterlab/translation';
+-import { ReactWidget } from '@jupyterlab/ui-components';
+ import { ISignal, Signal } from '@lumino/signaling';
+ import { FocusTracker, SingletonLayout, Widget } from '@lumino/widgets';
+ import * as React from 'react';
+@@ -24,8 +24,7 @@
+  */
+ abstract class PropertyInspectorProvider
+   extends Widget
+-  implements IPropertyInspectorProvider
+-{
++  implements IPropertyInspectorProvider {
+   /**
+    * Construct a new Property Inspector.
+    */
+@@ -146,24 +145,6 @@
+ }
+ 
+ /**
+- * {@link SideBarPropertyInspectorProvider} constructor options
+- */
+-export interface ILabPropertyInspectorOptions {
+-  /**
+-   * Application shell
+-   */
+-  shell: ILabShell;
+-  /**
+-   * Widget placeholder
+-   */
+-  placeholder?: Widget;
+-  /**
+-   * Application translation
+-   */
+-  translator?: ITranslator;
+-}
+-
+-/**
+  * A class that adds a property inspector provider to the
+  * JupyterLab sidebar.
+  */
+@@ -171,13 +152,13 @@
+   /**
+    * Construct a new Side Bar Property Inspector.
+    */
+-  constructor({
+-    shell,
+-    placeholder,
+-    translator
+-  }: ILabPropertyInspectorOptions) {
++  constructor(
++    labshell: ILabShell,
++    placeholder?: Widget,
++    translator?: ITranslator
++  ) {
+     super();
+-    this._labshell = shell;
++    this._labshell = labshell;
+     this.translator = translator || nullTranslator;
+     this._trans = this.translator.load('jupyterlab');
+     const layout = (this.layout = new SingletonLayout());
+@@ -193,7 +174,7 @@
+       this._placeholder.addClass('jp-PropertyInspector-placeholder');
+     }
+     layout.widget = this._placeholder;
+-    this._labshell.currentChanged.connect(this._onShellCurrentChanged, this);
++    labshell.currentChanged.connect(this._onShellCurrentChanged, this);
+     this._onShellCurrentChanged();
+   }
+ 
+@@ -281,7 +262,7 @@
+     /**
+      * Whether the property inspector is disposed.
+      */
+-    get isDisposed(): boolean {
++    get isDisposed() {
+       return this._isDisposed;
+     }
+ 

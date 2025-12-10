@@ -1,0 +1,10 @@
+
+We have a security advisory (CWE-79 - Cross-site Scripting) and the following AST-aware edit diff between a vulnerable file and a patched file (GumTree JSON diff attached).
+Your jobs (short answers):
+1) Identify which changed AST nodes are likely related to the vulnerability (for XSS: look for changes in output-escaping, unsanitized concatenation of user input to HTML, template calls, innerHTML, document.write, etc.).
+2) For each suspicious change, produce a JSON list of hunks with: file_path, start_line_old, end_line_old, start_line_new, end_line_new, reason (1-2 sentence), code_snippet_old, code_snippet_new.
+Be conservative: if unsure, mark "maybe" with rationale.
+Respond with a single JSON object array only.
+
+
+GumTree outputs:

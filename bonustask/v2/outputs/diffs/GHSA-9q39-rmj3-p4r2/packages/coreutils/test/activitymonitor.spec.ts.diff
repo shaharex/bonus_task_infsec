@@ -1,0 +1,11 @@
+--- packages\coreutils\test\activitymonitor.spec.ts (old)
++++ packages\coreutils\test\activitymonitor.spec.ts (new)
+@@ -2,7 +2,7 @@
+ // Distributed under the terms of the Modified BSD License.
+ 
+ import { ActivityMonitor } from '@jupyterlab/coreutils';
+-import { sleep } from '@jupyterlab/coreutils/lib/testutils';
++import { sleep } from '@jupyterlab/testutils';
+ import { Signal } from '@lumino/signaling';
+ 
+ class TestObject {

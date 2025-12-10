@@ -1,0 +1,625 @@
+--- galata\src\galata.ts (old)
++++ galata\src\galata.ts (new)
+@@ -3,17 +3,12 @@
+ // Distributed under the terms of the Modified BSD License.
+ 
+ import type * as nbformat from '@jupyterlab/nbformat';
+-import type {
+-  Session,
+-  TerminalAPI,
+-  User,
+-  Workspace
+-} from '@jupyterlab/services';
++import type { Session, TerminalAPI, Workspace } from '@jupyterlab/services';
+ import type { ISettingRegistry } from '@jupyterlab/settingregistry';
+ import type { JSONObject } from '@lumino/coreutils';
+-import { UUID } from '@lumino/coreutils';
+ import type { APIRequestContext, Browser, Page } from '@playwright/test';
+ import * as json5 from 'json5';
++import fetch from 'node-fetch';
+ import { ContentsHelper } from './contents';
+ import { PerformanceHelper } from './helpers';
+ import {
+@@ -35,23 +30,13 @@
+       checkForUpdates: false,
+       fetchNews: 'false'
+     },
+-    '@jupyterlab/fileeditor-extension:plugin': {},
+-    '@jupyterlab/notebook-extension:tracker': {},
+-    '@jupyterlab/codemirror-extension:plugin': {
+-      defaultConfig: {
+-        cursorBlinkRate: 0
+-      }
++    '@jupyterlab/fileeditor-extension:plugin': {
++      editorConfig: { cursorBlinkRate: 0 }
+     },
+-    '@jupyterlab/terminal-extension:plugin': {
+-      cursorBlink: false
+-    }
+-  };
+-
+-  export const DEFAULT_DOCUMENTATION_STATE: Record<string, any> = {
+-    data: {
+-      'layout-restorer:data': {
+-        relativeSizes: [0, 1, 0]
+-      }
++    '@jupyterlab/notebook-extension:tracker': {
++      codeCellConfig: { cursorBlinkRate: 0 },
++      markdownCellConfig: { cursorBlinkRate: 0 },
++      rawCellConfig: { cursorBlinkRate: 0 }
+     }
+   };
+ 
+@@ -66,6 +51,7 @@
+   export type DefaultSidebarTabId =
+     | 'filebrowser'
+     | 'jp-running-sessions'
++    | 'tab-manager'
+     | 'jp-property-inspector'
+     | 'table-of-contents'
+     | 'extensionmanager.main-view'
+@@ -99,78 +85,6 @@
+   export type NotebookToolbarItemId = DefaultNotebookToolbarItemId | string;
+ 
+   /**
+-   * Options to create a new page
+-   */
+-  export interface INewPageOption {
+-    /**
+-     * Application base URL
+-     */
+-    baseURL: string;
+-    /**
+-     * Playwright browser model
+-     */
+-    browser: Browser;
+-    /**
+-     * Callback that resolved when the application page is ready
+-     */
+-    waitForApplication: (page: Page, helpers: IJupyterLabPage) => Promise<void>;
+-    /**
+-     * Application URL path fragment
+-     *
+-     * Default: /lab
+-     */
+-    appPath?: string;
+-    /**
+-     * Whether to go to JupyterLab page within the fixture or not.
+-     *
+-     * Default: true
+-     */
+-    autoGoto?: boolean;
+-    /**
+-     * Mock Jupyter Server configuration in-memory or not.
+-     *
+-     * Default true
+-     */
+-    mockConfig?: boolean | Record<string, unknown>;
+-    /**
+-     * Mock JupyterLab state in-memory or not.
+-     *
+-     * Default galata.DEFAULT_SETTINGS
+-     */
+-    mockSettings?: boolean | Record<string, unknown>;
+-    /**
+-     * Mock JupyterLab settings in-memory or not.
+-     *
+-     * Default true
+-     */
+-    mockState?: boolean | Record<string, unknown>;
+-    /**
+-     * Mock JupyterLab user in-memory or not.
+-     *
+-     * Default true
+-     */
+-    mockUser?: boolean | Partial<User.IUser>;
+-    /**
+-     * Whether to store sessions in memory or not.
+-     *
+-     * Default true
+-     */
+-    mockSessions?: boolean;
+-    /**
+-     * Whether to store terminals in memory or not.
+-     *
+-     * Default true
+-     */
+-    mockTerminals?: boolean;
+-    /**
+-     * Create and delete a temporary path during the page existence
+-     *
+-     * Default ''
+-     */
+-    tmpPath?: string;
+-  }
+-
+-  /**
+    * Add the Galata helpers to the page model
+    *
+    * @param page Playwright page model
+@@ -211,7 +125,6 @@
+     mockConfig: boolean | Record<string, unknown>,
+     mockSettings: boolean | Record<string, unknown>,
+     mockState: boolean | Record<string, unknown>,
+-    mockUser: boolean | Partial<User.IUser>,
+     page: Page,
+     sessions: Map<string, Session.IModel> | null,
+     terminals: Map<string, TerminalAPI.IModel> | null,
+@@ -255,24 +168,6 @@
+       await Mock.mockState(page, workspace);
+     }
+ 
+-    let user: User.IUser = {
+-      identity: {
+-        username: UUID.uuid4(),
+-        name: 'jovyan',
+-        display_name: 'jovyan',
+-        initials: 'JP',
+-        color: 'var(--jp-collaborator-color1)'
+-      },
+-      permissions: {}
+-    };
+-    if (mockUser) {
+-      if (typeof mockUser !== 'boolean') {
+-        user = { ...mockUser } as any;
+-      }
+-      // The user will be stored in-memory
+-      await Mock.mockUser(page, user);
+-    }
+-
+     // Add sessions and terminals trackers
+     if (sessions) {
+       await Mock.mockRunners(page, sessions, 'sessions');
+@@ -292,78 +187,57 @@
+   /**
+    * Create a contents REST API helpers object
+    *
++   * @param baseURL Application base URL
++   * @param page Playwright page model
+    * @param request Playwright API request context
+-   * @param page Playwright page model
+    * @returns Contents REST API helpers
+    */
+   export function newContentsHelper(
+-    request?: APIRequestContext,
+-    page?: Page
++    baseURL: string,
++    page?: Page,
++    request?: APIRequestContext
+   ): ContentsHelper {
+-    return new ContentsHelper(request, page);
++    return new ContentsHelper(baseURL, page, request);
+   }
+ 
+   /**
+-   * Create a page with Galata helpers for the given browser in a new context.
++   * Create a page with Galata helpers for the given browser
+    *
++   * @param browser Playwright browser model
++   * @param baseURL Application base URL
++   * @param waitForApplication Callback that resolved when the application page is ready
++   * @param appPath Application URL path fragment
+    * @returns Playwright page model with Galata helpers
+    */
+-  export async function newPage(options: INewPageOption): Promise<{
+-    page: IJupyterLabPageFixture;
+-    sessions: Map<string, Session.IModel> | null;
+-    terminals: Map<string, TerminalAPI.IModel> | null;
+-  }> {
+-    const {
++  export async function newPage(
++    appPath: string,
++    autoGoto: boolean,
++    baseURL: string,
++    browser: Browser,
++    mockConfig: boolean | Record<string, unknown>,
++    mockSettings: boolean | Record<string, unknown>,
++    mockState: boolean | Record<string, unknown>,
++    sessions: Map<string, Session.IModel> | null,
++    terminals: Map<string, TerminalAPI.IModel> | null,
++    tmpPath: string,
++    waitForApplication: (page: Page, helpers: IJupyterLabPage) => Promise<void>
++  ): Promise<IJupyterLabPageFixture> {
++    const context = await browser.newContext();
++    const page = await context.newPage();
++
++    return initTestPage(
+       appPath,
+       autoGoto,
+       baseURL,
+-      browser,
+-      waitForApplication,
+       mockConfig,
+-      mockSessions,
+       mockSettings,
+       mockState,
+-      mockTerminals,
+-      mockUser,
+-      tmpPath
+-    } = {
+-      appPath: '/lab',
+-      autoGoto: true,
+-      mockConfig: true,
+-      mockSessions: true,
+-      mockSettings: galata.DEFAULT_SETTINGS,
+-      mockState: true,
+-      mockTerminals: true,
+-      mockUser: true,
+-      tmpPath: '',
+-      ...options
+-    };
+-    const context = await browser.newContext();
+-    const page = await context.newPage();
+-
+-    const sessions = mockSessions ? new Map<string, Session.IModel>() : null;
+-    const terminals = mockTerminals
+-      ? new Map<string, TerminalAPI.IModel>()
+-      : null;
+-
+-    return {
+-      page: await initTestPage(
+-        appPath,
+-        autoGoto,
+-        baseURL,
+-        mockConfig,
+-        mockSettings,
+-        mockState,
+-        mockUser,
+-        page,
+-        sessions,
+-        terminals,
+-        tmpPath,
+-        waitForApplication
+-      ),
++      page,
+       sessions,
+-      terminals
+-    };
++      terminals,
++      tmpPath,
++      waitForApplication
++    );
+   }
+ 
+   /**
+@@ -398,11 +272,6 @@
+     export const contents = /.*\/api\/contents(?<path>\/.+)?\?/;
+ 
+     /**
+-     * Custom CSS
+-     */
+-    export const customCSS = /.*\/custom\/custom.css/;
+-
+-    /**
+      * Extensions API
+      */
+     export const extensions = /.*\/lab\/api\/extensions.*/;
+@@ -412,7 +281,7 @@
+      *
+      * The session id can be found in the named group `id`.
+      *
+-     * The id will be prefixed by '/'.
++     * The id will be suffixed by '/'.
+      */
+     export const sessions = /.*\/api\/sessions(?<id>\/[@:-\w]+)?/;
+ 
+@@ -421,7 +290,7 @@
+      *
+      * The schema name can be found in the named group `id`.
+      *
+-     * The id will be prefixed by '/'.
++     * The id will be suffixed by '/'.
+      */
+     export const settings = /.*\/api\/settings(?<id>(\/[@:-\w]+)*)/;
+ 
+@@ -430,7 +299,7 @@
+      *
+      * The terminal id can be found in the named group `id`.
+      *
+-     * The id will be prefixed by '/'.
++     * The id will be suffixed by '/'.
+      */
+     export const terminals = /.*\/api\/terminals(?<id>\/[@:-\w]+)?/;
+ 
+@@ -439,7 +308,7 @@
+      *
+      * The locale can be found in the named group `id`.
+      *
+-     * The id will be prefixed by '/'.
++     * The id will be suffixed by '/'.
+      */
+     export const translations = /.*\/api\/translations(?<id>\/[@:-\w]+)?/;
+ 
+@@ -448,15 +317,9 @@
+      *
+      * The space name can be found in the named group `id`.
+      *
+-     * The id will be prefixed by '/'.
+-     * The id will be undefined for workspaces listing route.
+-     */
+-    export const workspaces = /.*\/api\/workspaces(?<id>(\/[-\w]+)+)?/;
+-
+-    /**
+-     * User API
+-     */
+-    export const user = /.*\/api\/me.*/;
++     * The id will be suffixed by '/'.
++     */
++    export const workspaces = /.*\/api\/workspaces(?<id>(\/[-\w]+)+)/;
+   }
+ 
+   /**
+@@ -571,127 +434,6 @@
+    */
+   export namespace Mock {
+     /**
+-     * Set last modified attributes one day ago one listing
+-     * directory content.
+-     *
+-     * @param page Page model object
+-     *
+-     * #### Notes
+-     * The goal is to freeze the file browser display
+-     */
+-    export async function freezeContentLastModified(
+-      page: Page,
+-      filter?: <T = any>(directoryList: T[]) => T[]
+-    ): Promise<void> {
+-      // Listen for closing connection (may happen when request are still being processed)
+-      let isClosed = false;
+-      const ctxt = page.context();
+-      ctxt.once('close', () => {
+-        isClosed = true;
+-      });
+-      ctxt.browser()?.once('disconnected', () => {
+-        isClosed = true;
+-      });
+-
+-      return page.route(Routes.contents, async (route, request) => {
+-        switch (request.method()) {
+-          case 'GET': {
+-            // Proxy the GET request
+-            const response = await ctxt.request.fetch(request);
+-            if (!response.ok()) {
+-              if (!page.isClosed() && !isClosed) {
+-                return route.fulfill({
+-                  status: response.status(),
+-                  body: await response.text()
+-                });
+-              }
+-              break;
+-            }
+-            const data = await response.json();
+-            // Modify the last_modified values to be set one day before now.
+-            if (
+-              data['type'] === 'directory' &&
+-              Array.isArray(data['content'])
+-            ) {
+-              if (filter) {
+-                data['content'] = filter(data['content']);
+-              }
+-              const now = Date.now();
+-              const aDayAgo = new Date(now - 24 * 3600 * 1000).toISOString();
+-              for (const entry of data['content'] as any[]) {
+-                // Mutate the list in-place
+-                entry['last_modified'] = aDayAgo;
+-              }
+-            }
+-
+-            if (!page.isClosed() && !isClosed) {
+-              return route.fulfill({
+-                status: 200,
+-                body: JSON.stringify(data),
+-                contentType: 'application/json'
+-              });
+-            }
+-            break;
+-          }
+-          default:
+-            return route.continue();
+-        }
+-      });
+-    }
+-
+-    /**
+-     * Set a notebook's writable attribute to false
+-     *
+-     * @param page Page model object
+-     *
+-     * #### Notes
+-     * The goal is to have the notebook to appear as read-only
+-     */
+-    export async function makeNotebookReadonly(page: Page): Promise<void> {
+-      // Listen for closing connection (may happen when request are still being processed)
+-      let isClosed = false;
+-      const ctxt = page.context();
+-      ctxt.once('close', () => {
+-        isClosed = true;
+-      });
+-      ctxt.browser()?.once('disconnected', () => {
+-        isClosed = true;
+-      });
+-
+-      return page.route(Routes.contents, async (route, request) => {
+-        switch (request.method()) {
+-          case 'GET': {
+-            // Proxy the GET request
+-            const response = await ctxt.request.fetch(request);
+-            if (!response.ok()) {
+-              if (!page.isClosed() && !isClosed) {
+-                return route.fulfill({
+-                  status: response.status(),
+-                  body: await response.text()
+-                });
+-              }
+-              break;
+-            }
+-            const data = await response.json();
+-            if (data['type'] === 'notebook') {
+-              data['writable'] = false;
+-            }
+-            if (!page.isClosed() && !isClosed) {
+-              return route.fulfill({
+-                status: 200,
+-                body: JSON.stringify(data),
+-                contentType: 'application/json'
+-              });
+-            }
+-            break;
+-          }
+-          default:
+-            return route.continue();
+-        }
+-      });
+-    }
+-
+-    /**
+      * Clear all wanted sessions or terminals.
+      *
+      * @param baseURL Application base URL
+@@ -701,18 +443,25 @@
+      * @returns Whether the runners were closed or not
+      */
+     export async function clearRunners(
+-      request: APIRequestContext,
++      baseURL: string,
+       runners: string[],
+-      type: 'sessions' | 'terminals'
++      type: 'sessions' | 'terminals',
++      request?: APIRequestContext
+     ): Promise<boolean> {
+       const responses = await Promise.all(
+         [...new Set(runners)].map(id =>
+-          request.fetch(`/api/${type}/${id}`, {
+-            method: 'DELETE'
+-          })
++          request
++            ? (request.fetch(`/api/${type}/${id}`, {
++                method: 'DELETE'
++              }) as any)
++            : (fetch(`${baseURL}/api/${type}/${id}`, {
++                method: 'DELETE'
++              }) as any)
+         )
+       );
+-      return responses.every(response => response.ok());
++      return responses.every(response =>
++        typeof response.ok === 'function' ? response.ok() : response.ok
++      );
+     }
+ 
+     /**
+@@ -757,30 +506,6 @@
+     }
+ 
+     /**
+-     * Mock custom CSS.
+-     *
+-     * @param page Page model object
+-     * @param customCSS Custom CSS content
+-     */
+-    export function mockCustomCSS(
+-      page: Page,
+-      customCSS: string
+-    ): Promise<void> {
+-      return page.route(Routes.customCSS, async (route, request) => {
+-        switch (request.method()) {
+-          case 'GET':
+-            return route.fulfill({
+-              status: 200,
+-              body: customCSS,
+-              contentType: 'text/css'
+-            });
+-          default:
+-            return route.continue();
+-        }
+-      });
+-    }
+-
+-    /**
+      * Mock the runners API to display only those created during a test
+      *
+      * @param page Page model object
+@@ -797,10 +522,10 @@
+       // Listen for closing connection (may happen when request are still being processed)
+       let isClosed = false;
+       const ctxt = page.context();
+-      ctxt.once('close', () => {
++      ctxt.on('close', () => {
+         isClosed = true;
+       });
+-      ctxt.browser()?.once('disconnected', () => {
++      ctxt.browser()?.on('disconnected', () => {
+         isClosed = true;
+       });
+       return page.route(routeRegex, async (route, request) => {
+@@ -963,25 +688,11 @@
+     ): Promise<void> {
+       return page.route(Routes.workspaces, (route, request) => {
+         switch (request.method()) {
+-          case 'GET': {
+-            const id = Routes.workspaces.exec(request.url())?.groups?.id;
+-            if (id) {
+-              return route.fulfill({
+-                status: 200,
+-                body: JSON.stringify(workspace)
+-              });
+-            } else {
+-              return route.fulfill({
+-                status: 200,
+-                body: JSON.stringify({
+-                  workspaces: {
+-                    ids: [workspace.metadata.id],
+-                    values: [workspace]
+-                  }
+-                })
+-              });
+-            }
+-          }
++          case 'GET':
++            return route.fulfill({
++              status: 200,
++              body: JSON.stringify(workspace)
++            });
+           case 'PUT': {
+             const data = request.postDataJSON();
+             workspace.data = { ...workspace.data, ...data.data };
+@@ -1014,10 +725,10 @@
+       // Listen for closing connection (may happen when request are still being processed)
+       let isClosed = false;
+       const ctxt = page.context();
+-      ctxt.once('close', () => {
++      ctxt.on('close', () => {
+         isClosed = true;
+       });
+-      ctxt.browser()?.once('disconnected', () => {
++      ctxt.browser()?.on('disconnected', () => {
+         isClosed = true;
+       });
+ 
+@@ -1116,25 +827,5 @@
+         }
+       });
+     }
+-
+-    /**
+-     * Mock user route.
+-     *
+-     * @param page Page model object
+-     * @param user In-memory user
+-     */
+-    export function mockUser(page: Page, user: User.IUser): Promise<void> {
+-      return page.route(Routes.user, (route, request) => {
+-        switch (request.method()) {
+-          case 'GET':
+-            return route.fulfill({
+-              status: 200,
+-              body: JSON.stringify(user)
+-            });
+-          default:
+-            return route.continue();
+-        }
+-      });
+-    }
+   }
+ }

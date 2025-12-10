@@ -1,0 +1,9 @@
+--- packages\services\src\shim\ws.ts (old)
++++ packages\services\src\shim\ws.ts (new)
+@@ -1,6 +1 @@
+-/*
+- * Copyright (c) Jupyter Development Team.
+- * Distributed under the terms of the Modified BSD License.
+- */
+-
+ export default WebSocket;

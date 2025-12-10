@@ -1,0 +1,38 @@
+--- packages\debugger\test\service.spec.ts (old)
++++ packages\debugger\test\service.spec.ts (new)
+@@ -3,9 +3,11 @@
+ 
+ import { KernelSpec, KernelSpecManager, Session } from '@jupyterlab/services';
+ 
+-import { createSession } from '@jupyterlab/docregistry/lib/testutils';
+-
+-import { JupyterServer, signalToPromise } from '@jupyterlab/testing';
++import {
++  createSession,
++  JupyterServer,
++  signalToPromise
++} from '@jupyterlab/testutils';
+ 
+ import { JSONExt, UUID } from '@lumino/coreutils';
+ 
+@@ -35,8 +37,9 @@
+ const server = new JupyterServer();
+ 
+ beforeAll(async () => {
++  jest.setTimeout(20000);
+   await server.start();
+-}, 30000);
++});
+ 
+ afterAll(async () => {
+   await server.shutdown();
+@@ -94,8 +97,8 @@
+       path: UUID.uuid4()
+     });
+     await connection.changeKernel({ name: 'python3' });
++    session = new Debugger.Session({ connection });
+     config = new Debugger.Config();
+-    session = new Debugger.Session({ connection, config });
+     service = new Debugger.Service({ specsManager, config });
+   });
+ 

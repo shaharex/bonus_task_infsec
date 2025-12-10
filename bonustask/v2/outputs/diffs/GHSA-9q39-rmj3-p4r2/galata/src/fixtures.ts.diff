@@ -1,0 +1,174 @@
+--- galata\src\fixtures.ts (old)
++++ galata\src\fixtures.ts (new)
+@@ -2,7 +2,7 @@
+ // Copyright (c) Jupyter Development Team.
+ // Distributed under the terms of the Modified BSD License.
+ 
+-import type { Session, TerminalAPI, User } from '@jupyterlab/services';
++import type { Session, TerminalAPI } from '@jupyterlab/services';
+ import {
+   test as base,
+   Page,
+@@ -93,17 +93,6 @@
+    */
+   mockSettings: boolean | Record<string, unknown>;
+   /**
+-   * Mock JupyterLab user in-memory or not.
+-   *
+-   * Possible values are:
+-   * - true (default): JupyterLab user will be mocked on a per test basis
+-   * - false: JupyterLab user won't be mocked (It will be a random user so snapshots won't match)
+-   * - Record<string, unknown>: Initial JupyterLab user - Mapping (user attribute, value).
+-   *
+-   * By default the user is stored in-memory.
+-   */
+-  mockUser: boolean | Partial<User.IUser>;
+-  /**
+    * Galata can keep the uploaded and created files in ``tmpPath`` on
+    * the server root for debugging purpose. By default the files are
+    * always deleted
+@@ -171,7 +160,7 @@
+    *
+    * Default: /lab
+    */
+-  appPath: ['/lab', { option: true }],
++  appPath: '/lab',
+   /**
+    * Whether to go to JupyterLab page within the fixture or not.
+    *
+@@ -179,7 +168,7 @@
+    *
+    * Note: Setting it to false allows to register new route mock-ups for example.
+    */
+-  autoGoto: [true, { option: true }],
++  autoGoto: true,
+   /**
+    * Mock JupyterLab config in-memory or not.
+    *
+@@ -201,7 +190,7 @@
+    *
+    * By default the state is stored in-memory
+    */
+-  mockState: [true, { option: true }],
++  mockState: true,
+   /**
+    * Mock JupyterLab settings in-memory or not.
+    *
+@@ -215,18 +204,7 @@
+    * By default the settings are stored in-memory. However the
+    * they are still initialized with the hard drive values.
+    */
+-  mockSettings: [galata.DEFAULT_SETTINGS, { option: true }],
+-  /**
+-   * Mock JupyterLab user in-memory or not.
+-   *
+-   * Possible values are:
+-   * - true (default): JupyterLab user will be mocked on a per test basis
+-   * - false: JupyterLab user won't be mocked (It will be a random user so snapshots won't match)
+-   * - Record<string, unknown>: Initial JupyterLab user - Mapping (user attribute, value).
+-   *
+-   * By default the user is stored in-memory.
+-   */
+-  mockUser: [true, { option: true }],
++  mockSettings: galata.DEFAULT_SETTINGS,
+   /**
+    * Galata can keep the uploaded and created files in ``tmpPath`` on
+    * the server root for debugging purpose. By default the files are
+@@ -236,7 +214,7 @@
+    * - 'on' - ``tmpPath`` is never deleted
+    * - 'only-on-failure' - ``tmpPath`` is deleted except if a test failed or timed out.
+    */
+-  serverFiles: ['off', { option: true }],
++  serverFiles: 'off',
+   /**
+    * Sessions created during the test.
+    *
+@@ -246,13 +224,17 @@
+    *
+    * By default the sessions created during a test will be tracked and disposed at the end.
+    */
+-  sessions: async ({ request }, use) => {
++  sessions: async ({ baseURL }, use) => {
+     const sessions = new Map<string, Session.IModel>();
+ 
+     await use(sessions);
+ 
+     if (sessions.size > 0) {
+-      await galata.Mock.clearRunners(request, [...sessions.keys()], 'sessions');
++      await galata.Mock.clearRunners(
++        baseURL!,
++        [...sessions.keys()],
++        'sessions'
++      );
+     }
+   },
+   /**
+@@ -260,18 +242,18 @@
+    *
+    * Possible values are:
+    * - null: The Terminals API won't be mocked
+-   * - Map<string, TerminalAPI.IModel>: The Terminals created during a test.
++   * - Map<string, TerminalsAPI.IModel>: The Terminals created during a test.
+    *
+    * By default the Terminals created during a test will be tracked and disposed at the end.
+    */
+-  terminals: async ({ request }, use) => {
++  terminals: async ({ baseURL }, use) => {
+     const terminals = new Map<string, TerminalAPI.IModel>();
+ 
+     await use(terminals);
+ 
+     if (terminals.size > 0) {
+       await galata.Mock.clearRunners(
+-        request,
++        baseURL!,
+         [...terminals.keys()],
+         'terminals'
+       );
+@@ -283,13 +265,13 @@
+    * Note: if you override this string, you will need to take care of creating the
+    * folder and cleaning it.
+    */
+-  tmpPath: async ({ request, serverFiles }, use, testInfo) => {
++  tmpPath: async ({ baseURL, serverFiles, request }, use, testInfo) => {
+     // Remove appended retry part for reproducibility
+     const testFolder = path
+       .basename(testInfo.outputDir)
+       .replace(/-retry\d+$/i, '');
+ 
+-    const contents = new ContentsHelper(request);
++    const contents = new ContentsHelper(baseURL!, undefined, request);
+ 
+     if (await contents.directoryExists(testFolder)) {
+       await contents.deleteDirectory(testFolder);
+@@ -321,10 +303,13 @@
+       page: Page,
+       helpers: IJupyterLabPage
+     ): Promise<void> => {
+-      await page.locator('#jupyterlab-splash').waitFor({ state: 'detached' });
++      await page.waitForSelector('#jupyterlab-splash', {
++        state: 'detached'
++      });
+       await helpers.waitForCondition(() => {
+         return helpers.activity.isTabActive('Launcher');
+       });
++
+       // Oddly current tab is not always set to active
+       if (!(await helpers.isInSimpleMode())) {
+         await helpers.activity.activateTab('Launcher');
+@@ -356,7 +341,6 @@
+       mockConfig,
+       mockSettings,
+       mockState,
+-      mockUser,
+       page,
+       sessions,
+       terminals,
+@@ -373,7 +357,6 @@
+         mockConfig,
+         mockSettings,
+         mockState,
+-        mockUser,
+         page,
+         sessions,
+         terminals,

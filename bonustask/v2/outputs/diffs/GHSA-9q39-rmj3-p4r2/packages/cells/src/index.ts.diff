@@ -1,0 +1,8 @@
+--- packages\cells\src\index.ts (old)
++++ packages\cells\src\index.ts (new)
+@@ -13,5 +13,4 @@
+ export * from './inputarea';
+ export * from './model';
+ export * from './placeholder';
+-export * from './searchprovider';
+ export * from './widget';

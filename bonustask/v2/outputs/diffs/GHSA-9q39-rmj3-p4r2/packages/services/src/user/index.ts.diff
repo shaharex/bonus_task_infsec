@@ -1,0 +1,10 @@
+--- packages\services\src\user\index.ts (old)
++++ packages\services\src\user\index.ts (new)
+@@ -60,7 +60,6 @@
+       .catch(
+         _ =>
+           // Return a promise that will never resolve, so user service is never ready
+-          // This typically occurs when the backend has no user service
+           new Promise(() => {
+             // no-op
+           })

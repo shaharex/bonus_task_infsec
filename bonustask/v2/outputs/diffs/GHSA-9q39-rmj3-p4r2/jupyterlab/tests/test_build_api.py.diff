@@ -1,0 +1,25 @@
+--- jupyterlab\tests\test_build_api.py (old)
++++ jupyterlab\tests\test_build_api.py (new)
+@@ -1,8 +1,4 @@
+-# Copyright (c) Jupyter Development Team.
+-# Distributed under the terms of the Modified BSD License.
+-
+ """Test the kernels service API."""
+-
+ import asyncio
+ import json
+ import os
+@@ -108,11 +104,12 @@
+         assert expected_http_error(e, 500)
+ 
+         loop = asyncio.get_event_loop()
+-        asyncio.ensure_future(build_api_tester.build(), loop=loop)  # noqa RUF006
++        asyncio.ensure_future(build_api_tester.build(), loop=loop)
+ 
+         while True:
+             r = await build_api_tester.getStatus()
+             res = r.body.decode()
++            print(res)
+             resp = json.loads(res)
+             if resp["status"] == "building":
+                 break

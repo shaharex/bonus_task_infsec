@@ -1,0 +1,28 @@
+--- galata\src\helpers\theme.ts (old)
++++ galata\src\helpers\theme.ts (new)
+@@ -14,13 +14,6 @@
+    */
+   async setDarkTheme(): Promise<void> {
+     await this.setTheme('JupyterLab Dark');
+-  }
+-
+-  /**
+-   * Set JupyterLab theme to Dark High Contrast
+-   */
+-  async setDarkHighContrastTheme(): Promise<void> {
+-    await this.setTheme('JupyterLab Dark High Contrast');
+   }
+ 
+   /**
+@@ -49,9 +42,9 @@
+   async setTheme(themeName: string): Promise<void> {
+     const page = this.page;
+     await page.evaluate(async (themeName: string) => {
+-      await window.galata.setTheme(themeName);
++      await window.galataip.setTheme(themeName);
+     }, themeName);
+ 
+-    await page.locator('#jupyterlab-splash').waitFor({ state: 'detached' });
++    await page.waitForSelector('#jupyterlab-splash', { state: 'detached' });
+   }
+ }

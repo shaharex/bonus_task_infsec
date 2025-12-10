@@ -1,0 +1,174 @@
+--- packages\filebrowser\test\model.spec.ts (old)
++++ packages\filebrowser\test\model.spec.ts (new)
+@@ -4,7 +4,6 @@
+ import { PageConfig } from '@jupyterlab/coreutils';
+ import { DocumentManager, IDocumentManager } from '@jupyterlab/docmanager';
+ import { DocumentRegistry, TextModelFactory } from '@jupyterlab/docregistry';
+-import { DocumentWidgetOpenerMock } from '@jupyterlab/docregistry/lib/testutils';
+ import { Contents, ServiceManager } from '@jupyterlab/services';
+ import { StateDB } from '@jupyterlab/statedb';
+ import {
+@@ -12,11 +11,9 @@
+   dismissDialog,
+   signalToPromises,
+   sleep
+-} from '@jupyterlab/testing';
+-import {
+-  ContentsManagerMock,
+-  ServiceManagerMock
+-} from '@jupyterlab/services/lib/testutils';
++} from '@jupyterlab/testutils';
++import * as Mock from '@jupyterlab/testutils/lib/mock';
++import { toArray } from '@lumino/algorithm';
+ import { UUID } from '@lumino/coreutils';
+ import expect from 'expect';
+ import { CHUNK_SIZE, FileBrowserModel, LARGE_FILE_SIZE } from '../src';
+@@ -25,7 +22,7 @@
+  * A contents manager that delays requests by less each time it is called
+  * in order to simulate out-of-order responses from the server.
+  */
+-class DelayedContentsManager extends ContentsManagerMock {
++class DelayedContentsManager extends Mock.ContentsManagerMock {
+   get(
+     path: string,
+     options?: Contents.IFetchOptions
+@@ -34,12 +31,9 @@
+       const delay = this._delay;
+       this._delay -= 500;
+       void super.get(path, options).then(contents => {
+-        setTimeout(
+-          () => {
+-            resolve(contents);
+-          },
+-          Math.max(delay, 0)
+-        );
++        setTimeout(() => {
++          resolve(contents);
++        }, Math.max(delay, 0));
+       });
+     });
+   }
+@@ -56,13 +50,17 @@
+   let subDir: string;
+   let subSubDir: string;
+   let state: StateDB;
+-  const opener = new DocumentWidgetOpenerMock();
++  const opener: DocumentManager.IWidgetOpener = {
++    open: widget => {
++      /* no op */
++    }
++  };
+ 
+   beforeAll(() => {
+     registry = new DocumentRegistry({
+       textModelFactory: new TextModelFactory()
+     });
+-    serviceManager = new ServiceManagerMock();
++    serviceManager = new Mock.ServiceManagerMock();
+     manager = new DocumentManager({
+       registry,
+       opener,
+@@ -198,7 +196,7 @@
+     describe('#items()', () => {
+       it('should get an iterator of items in the current path', () => {
+         const items = model.items();
+-        expect(!items.next().done).toBe(true);
++        expect(items.next()).toBeTruthy();
+       });
+     });
+ 
+@@ -219,7 +217,7 @@
+           type: 'test'
+         });
+         await model.cd();
+-        expect(!model.sessions().next().done).toBe(true);
++        expect(model.sessions().next()).toBeTruthy();
+         await session.shutdown();
+       });
+     });
+@@ -238,8 +236,8 @@
+     });
+ 
+     describe('#refresh()', () => {
+-      it('should refresh the contents', async () => {
+-        await expect(model.refresh()).resolves.not.toThrow();
++      it('should refresh the contents', () => {
++        return model.refresh();
+       });
+     });
+ 
+@@ -266,7 +264,7 @@
+       });
+ 
+       it('should be resilient to a slow initial fetch', async () => {
+-        const delayedServiceManager = new ServiceManagerMock();
++        const delayedServiceManager = new Mock.ServiceManagerMock();
+         (delayedServiceManager as any).contents = new DelayedContentsManager();
+         const contents = await delayedServiceManager.contents.newUntitled({
+           type: 'directory'
+@@ -323,7 +321,7 @@
+     });
+ 
+     describe('#download()', () => {
+-      it.skip('should download the file without error', () => {
++      it('should download the file without error', () => {
+         // TODO: how to test this?
+       });
+     });
+@@ -436,8 +434,9 @@
+               const file = new File([content], fname, { type: 'text/plain' });
+               await model.upload(file);
+               // Ensure we get the file back.
+-              const contentModel =
+-                await model.manager.services.contents.get(fname);
++              const contentModel = await model.manager.services.contents.get(
++                fname
++              );
+               expect(contentModel.content.length).toBeGreaterThan(0);
+             });
+           }
+@@ -453,7 +452,7 @@
+           );
+ 
+           const uploaded = model.upload(file);
+-          expect(Array.from(model.uploads())).toEqual([]);
++          expect(toArray(model.uploads())).toEqual([]);
+           expect(await start).toEqual([
+             model,
+             {
+@@ -462,7 +461,7 @@
+               newValue: { path: fname, progress: 0 }
+             }
+           ]);
+-          expect(Array.from(model.uploads())).toEqual([
++          expect(toArray(model.uploads())).toEqual([
+             { path: fname, progress: 0 }
+           ]);
+           expect(await first).toEqual([
+@@ -473,7 +472,7 @@
+               newValue: { path: fname, progress: 0 }
+             }
+           ]);
+-          expect(Array.from(model.uploads())).toEqual([
++          expect(toArray(model.uploads())).toEqual([
+             { path: fname, progress: 0 }
+           ]);
+           expect(await second).toEqual([
+@@ -484,7 +483,7 @@
+               newValue: { path: fname, progress: 1 / 2 }
+             }
+           ]);
+-          expect(Array.from(model.uploads())).toEqual([
++          expect(toArray(model.uploads())).toEqual([
+             { path: fname, progress: 1 / 2 }
+           ]);
+           expect(await finished).toEqual([
+@@ -495,7 +494,7 @@
+               newValue: null
+             }
+           ]);
+-          expect(Array.from(model.uploads())).toEqual([]);
++          expect(toArray(model.uploads())).toEqual([]);
+           await uploaded;
+         });
+ 

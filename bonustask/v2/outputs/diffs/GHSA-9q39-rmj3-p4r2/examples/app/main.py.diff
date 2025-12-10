@@ -1,0 +1,10 @@
+--- examples\app\main.py (old)
++++ examples\app\main.py (new)
+@@ -21,6 +21,7 @@
+ 
+ 
+ class ExampleApp(LabServerApp):
++
+     extension_url = "/lab"
+     default_url = "/lab"
+     name = __name__

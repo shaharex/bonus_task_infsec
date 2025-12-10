@@ -1,0 +1,66 @@
+--- packages\docmanager\src\dialogs.ts (old)
++++ packages\docmanager\src\dialogs.ts (new)
+@@ -2,7 +2,6 @@
+ // Distributed under the terms of the Modified BSD License.
+ 
+ import { Dialog, showDialog, showErrorMessage } from '@jupyterlab/apputils';
+-import { DocumentRegistry } from '@jupyterlab/docregistry';
+ import { PathExt } from '@jupyterlab/coreutils';
+ import { Contents } from '@jupyterlab/services';
+ import { ITranslator, nullTranslator } from '@jupyterlab/translation';
+@@ -39,25 +38,19 @@
+  */
+ export function renameDialog(
+   manager: IDocumentManager,
+-  context: DocumentRegistry.Context,
++  oldPath: string,
+   translator?: ITranslator
+-): Promise<void | null> {
++): Promise<Contents.IModel | null> {
+   translator = translator || nullTranslator;
+   const trans = translator.load('jupyterlab');
+ 
+-  const localPath = context.localPath.split('/');
+-  const fileName = localPath.pop() || context.localPath;
+-
+   return showDialog({
+     title: trans.__('Rename File'),
+-    body: new RenameHandler(fileName),
++    body: new RenameHandler(oldPath),
+     focusNodeSelector: 'input',
+     buttons: [
+-      Dialog.cancelButton(),
+-      Dialog.okButton({
+-        label: trans.__('Rename'),
+-        ariaLabel: trans.__('Rename File')
+-      })
++      Dialog.cancelButton({ label: trans.__('Cancel') }),
++      Dialog.okButton({ label: trans.__('Rename') })
+     ]
+   }).then(result => {
+     if (!result.value) {
+@@ -75,7 +68,9 @@
+       );
+       return null;
+     }
+-    return context.rename(result.value);
++    const basePath = PathExt.dirname(oldPath);
++    const newPath = PathExt.join(basePath, result.value);
++    return renameFile(manager, oldPath, newPath);
+   });
+ }
+ 
+@@ -117,11 +112,8 @@
+     title: trans.__('Overwrite file?'),
+     body: trans.__('"%1" already exists, overwrite?', path),
+     buttons: [
+-      Dialog.cancelButton(),
+-      Dialog.warnButton({
+-        label: trans.__('Overwrite'),
+-        ariaLabel: trans.__('Overwrite Existing File')
+-      })
++      Dialog.cancelButton({ label: trans.__('Cancel') }),
++      Dialog.warnButton({ label: trans.__('Overwrite') })
+     ]
+   };
+   return showDialog(options).then(result => {

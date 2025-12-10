@@ -1,0 +1,15 @@
+--- examples\terminal\src\index.ts (old)
++++ examples\terminal\src\index.ts (new)
+@@ -7,8 +7,10 @@
+   'example/'
+ );
+ 
+-// Import style through JS file to deduplicate them.
+-import './style';
++import '@jupyterlab/application/style/index.css';
++import '@jupyterlab/terminal/style/index.css';
++import '@jupyterlab/theme-light-extension/style/theme.css';
++import '../index.css';
+ 
+ import { DockPanel, Widget } from '@lumino/widgets';
+ 

@@ -1,0 +1,109 @@
+--- packages\imageviewer-extension\src\index.ts (old)
++++ packages\imageviewer-extension\src\index.ts (new)
+@@ -70,7 +70,6 @@
+  */
+ const plugin: JupyterFrontEndPlugin<IImageTracker> = {
+   activate,
+-  description: 'Adds image viewer and provide its tracker.',
+   id: '@jupyterlab/imageviewer-extension:plugin',
+   provides: IImageTracker,
+   requires: [ITranslator],
+@@ -116,7 +115,6 @@
+ 
+   const factory = new ImageViewerFactory({
+     name: FACTORY,
+-    label: trans.__('Image'),
+     modelName: 'base64',
+     fileTypes: [...FILE_TYPES, ...TEXT_FILE_TYPES],
+     defaultFor: FILE_TYPES,
+@@ -125,7 +123,6 @@
+ 
+   const textFactory = new ImageViewerFactory({
+     name: TEXT_FACTORY,
+-    label: trans.__('Image (Text)'),
+     modelName: 'text',
+     fileTypes: TEXT_FILE_TYPES,
+     defaultFor: TEXT_FILE_TYPES,
+@@ -179,11 +176,11 @@
+ /**
+  * Add the commands for the image widget.
+  */
+-function addCommands(
++export function addCommands(
+   app: JupyterFrontEnd,
+   tracker: IImageTracker,
+   translator: ITranslator
+-): void {
++) {
+   const trans = translator.load('jupyterlab');
+   const { commands, shell } = app;
+ 
+@@ -197,60 +194,53 @@
+     );
+   }
+ 
+-  commands.addCommand(CommandIDs.zoomIn, {
++  commands.addCommand('imageviewer:zoom-in', {
+     execute: zoomIn,
+     label: trans.__('Zoom In'),
+     isEnabled
+   });
+ 
+-  commands.addCommand(CommandIDs.zoomOut, {
++  commands.addCommand('imageviewer:zoom-out', {
+     execute: zoomOut,
+     label: trans.__('Zoom Out'),
+     isEnabled
+   });
+ 
+-  commands.addCommand(CommandIDs.resetImage, {
++  commands.addCommand('imageviewer:reset-image', {
+     execute: resetImage,
+     label: trans.__('Reset Image'),
+     isEnabled
+   });
+ 
+-  commands.addCommand(CommandIDs.rotateClockwise, {
++  commands.addCommand('imageviewer:rotate-clockwise', {
+     execute: rotateClockwise,
+     label: trans.__('Rotate Clockwise'),
+     isEnabled
+   });
+ 
+-  commands.addCommand(CommandIDs.rotateCounterclockwise, {
++  commands.addCommand('imageviewer:rotate-counterclockwise', {
+     execute: rotateCounterclockwise,
+     label: trans.__('Rotate Counterclockwise'),
+     isEnabled
+   });
+ 
+-  commands.addCommand(CommandIDs.flipHorizontal, {
++  commands.addCommand('imageviewer:flip-horizontal', {
+     execute: flipHorizontal,
+     label: trans.__('Flip image horizontally'),
+     isEnabled
+   });
+ 
+-  commands.addCommand(CommandIDs.flipVertical, {
++  commands.addCommand('imageviewer:flip-vertical', {
+     execute: flipVertical,
+     label: trans.__('Flip image vertically'),
+     isEnabled
+   });
+ 
+-  commands.addCommand(CommandIDs.invertColors, {
++  commands.addCommand('imageviewer:invert-colors', {
+     execute: invertColors,
+     label: trans.__('Invert Colors'),
+     isEnabled
+   });
+-
+-  const notify = () => {
+-    Object.values(CommandIDs).forEach(id => commands.notifyCommandChanged(id));
+-  };
+-  // All commands with isEnabled defined directly or in a semantic commands
+-  tracker.currentChanged.connect(notify);
+-  shell.currentChanged?.connect(notify);
+ 
+   function zoomIn(): void {
+     const widget = tracker.currentWidget?.content;

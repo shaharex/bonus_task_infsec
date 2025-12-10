@@ -1,0 +1,17 @@
+--- packages\logconsole\src\tokens.ts (old)
++++ packages\logconsole\src\tokens.ts (new)
+@@ -9,12 +9,12 @@
+ import { IDisposable } from '@lumino/disposable';
+ import { ISignal } from '@lumino/signaling';
+ 
++/* tslint:disable */
+ /**
+  * The Logger Registry token.
+  */
+ export const ILoggerRegistry = new Token<ILoggerRegistry>(
+-  '@jupyterlab/logconsole:ILoggerRegistry',
+-  'A service providing a logger infrastructure.'
++  '@jupyterlab/logconsole:ILoggerRegistry'
+ );
+ 
+ export type ILoggerRegistryChange = 'append';

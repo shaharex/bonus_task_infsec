@@ -1,0 +1,12 @@
+
+Patch Verification Task
+Advisory: GHSA-7pq5-qcp6-mcww
+
+Vulnerable version: < 2.10.7
+Patched version: 2.10.7
+
+Using the diffs provided, decide if the patch successfully fixes the vulnerability.
+Return JSON with fields:
+- fixes_vulnerability: yes/no/maybe
+- confidence: 0-100
+- rationale

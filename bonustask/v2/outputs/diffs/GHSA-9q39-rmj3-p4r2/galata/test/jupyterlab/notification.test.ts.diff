@@ -1,0 +1,91 @@
+--- galata\test\jupyterlab\notification.test.ts (old)
++++ galata\test\jupyterlab\notification.test.ts (new)
+@@ -27,7 +27,7 @@
+         });
+       }, type);
+ 
+-      await page.locator('.Toastify__toast').waitFor();
++      await page.waitForSelector('.Toastify__toast');
+ 
+       expect(
+         await page.locator('.Toastify__toast').screenshot({
+@@ -70,17 +70,14 @@
+       });
+     });
+ 
+-    const handle = page.locator('.Toastify__toast');
+-    await handle.waitFor();
+-
+-    expect(await handle.screenshot({ animations: 'disabled' })).toMatchSnapshot(
+-      {
+-        name: `notification-with-actions.png`
+-      }
+-    );
++    const handle = await page.waitForSelector('.Toastify__toast');
++
++    expect(await handle.screenshot()).toMatchSnapshot({
++      name: `notification-with-actions.png`
++    });
+ 
+     await Promise.all([
+-      handle.last().waitFor({ state: 'hidden' }),
++      handle.waitForElementState('hidden'),
+       page.click('.Toastify__toast >> text=Button 2')
+     ]);
+ 
+@@ -114,8 +111,7 @@
+         });
+       }, displayType);
+ 
+-      const handle = page.locator('.Toastify__toast').first();
+-      await handle.waitFor();
++      const handle = await page.waitForSelector('.Toastify__toast');
+ 
+       expect(
+         await handle.screenshot({ animations: 'disabled' })
+@@ -136,7 +132,7 @@
+       });
+     });
+ 
+-    await page.locator('.Toastify__toast').first().waitFor();
++    await page.waitForSelector('.Toastify__toast');
+ 
+     expect(
+       await page.locator('.Toastify__toast-body').innerHTML()
+@@ -153,7 +149,7 @@
+       });
+     });
+ 
+-    await page.locator('.Toastify__toast >> text=Simple note').waitFor();
++    await page.waitForSelector('.Toastify__toast >> text=Simple note');
+ 
+     await page.evaluate(id => {
+       return window.jupyterapp.commands.execute(
+@@ -179,12 +175,12 @@
+       });
+     });
+ 
+-    await page.locator('.Toastify__toast >> text=Simple note').waitFor();
++    await page.waitForSelector('.Toastify__toast >> text=Simple note');
+ 
+     await Promise.all([
+-      page
+-        .locator('.Toastify__toast >> text=Simple note')
+-        .waitFor({ state: 'detached' }),
++      page.waitForSelector('.Toastify__toast >> text=Simple note', {
++        state: 'detached'
++      }),
+       page.evaluate(id => {
+         return window.jupyterapp.commands.execute(
+           'apputils:dismiss-notification',
+@@ -248,9 +244,7 @@
+     );
+ 
+     await page
+-      .locator(
+-        '.jp-Notification-Header >> jp-button[title="Hide notifications"]'
+-      )
++      .locator('.jp-Notification-Header >> button[title="Hide notifications"]')
+       .click();
+ 
+     expect(await status.getAttribute('class')).not.toMatch(

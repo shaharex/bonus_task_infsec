@@ -1,0 +1,24 @@
+--- packages\docregistry\test\mimedocument.spec.ts (old)
++++ packages\docregistry\test\mimedocument.spec.ts (new)
+@@ -8,10 +8,9 @@
+   MimeDocument,
+   MimeDocumentFactory
+ } from '@jupyterlab/docregistry';
+-import { createFileContextWithMockedServices } from '@jupyterlab/docregistry/lib/testutils';
+ import { IRenderMime, RenderedText } from '@jupyterlab/rendermime';
+-import { defaultRenderMime } from '@jupyterlab/rendermime/lib/testutils';
+-import { testEmission } from '@jupyterlab/testing';
++import { defaultRenderMime, testEmission } from '@jupyterlab/testutils';
++import * as Mock from '@jupyterlab/testutils/lib/mock';
+ import { Message } from '@lumino/messaging';
+ import { BoxLayout } from '@lumino/widgets';
+ 
+@@ -48,7 +47,7 @@
+   let dContext: Context<DocumentRegistry.IModel>;
+ 
+   beforeEach(async () => {
+-    dContext = (await createFileContextWithMockedServices()) as any;
++    dContext = await Mock.createFileContext();
+   });
+ 
+   afterEach(() => {

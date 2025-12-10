@@ -1,0 +1,69 @@
+--- galata\test\galata\fixture.spec.ts (old)
++++ galata\test\galata\fixture.spec.ts (new)
+@@ -16,7 +16,7 @@
+ 
+   test('should have playwright Page interface', async ({ page }) => {
+     expect(page.waitForSelector).toBe(
+-      (page as unknown as JupyterLabPage).page.waitForSelector
++      ((page as any) as JupyterLabPage).page.waitForSelector
+     );
+   });
+ });
+@@ -37,7 +37,7 @@
+ 
+   test('should not return mocked settings after save', async ({ page }) => {
+     await page.click('text=Settings');
+-    await page.click('.lm-Menu ul[role="menu"] >> text=Theme');
++    await page.click('ul[role="menu"] >> text=Theme');
+     const [response] = await Promise.all([
+       page.waitForResponse(
+         response =>
+@@ -45,11 +45,11 @@
+             response.url()
+           ) && response.request().method() === 'GET'
+       ),
+-      page.click('.lm-Menu ul[role="menu"] >> text=JupyterLab Light')
++      page.click('ul[role="menu"] >> text=JupyterLab Light')
+     ]);
+ 
+-    await page.locator('#jupyterlab-splash').waitFor({ state: 'detached' });
+-    await page.locator('div[role="main"] >> text=Launcher').waitFor();
++    await page.waitForSelector('#jupyterlab-splash', { state: 'detached' });
++    await page.waitForSelector('div[role="main"] >> text=Launcher');
+ 
+     expect(((await response.json()) as any).raw).toMatch(/JupyterLab Light/);
+ 
+@@ -98,7 +98,7 @@
+ 
+   test('should return the mocked state', async ({ page }) => {
+     expect(
+-      await page.locator(
++      await page.waitForSelector(
+         '[aria-label="Running Sessions section"] >> text=Open Tabs'
+       )
+     ).toBeTruthy();
+@@ -120,9 +120,9 @@
+     expect(sessions.size).toEqual(1);
+ 
+     await page.menu.clickMenuItem('File>New>Console');
+-    await page.locator('.jp-Dialog').waitFor();
++    await page.waitForSelector('.jp-Dialog');
+     await page.click('.jp-Dialog .jp-mod-accept');
+-    await page.locator('text= | Idle').waitFor();
++    await page.waitForSelector('text= | Idle');
+ 
+     expect(sessions.size).toEqual(2);
+   });
+@@ -161,10 +161,8 @@
+ 
+ test.describe('tmpPath', () => {
+   test('should return an unique test folder', ({ tmpPath }) => {
+-    // Use regex as Playwright is preventing the unique test name to be too long
+-    // by replacing the name center part with a hash of 5 characters.
+-    expect(tmpPath).toMatch(
+-      /test-galata-fixture-tmpPat-\w{5}-eturn-an-unique-test-folder-galata/
++    expect(tmpPath).toEqual(
++      'test-galata-fixture-tmpPath-should-return-an-unique-test-folder-galata'
+     );
+   });
+ });

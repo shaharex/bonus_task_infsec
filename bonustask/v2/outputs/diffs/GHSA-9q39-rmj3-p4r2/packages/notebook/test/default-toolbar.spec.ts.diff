@@ -1,0 +1,154 @@
+--- packages\notebook\test\default-toolbar.spec.ts (old)
++++ packages\notebook\test\default-toolbar.spec.ts (new)
+@@ -9,7 +9,7 @@
+   framePromise,
+   signalToPromise,
+   sleep
+-} from '@jupyterlab/testing';
++} from '@jupyterlab/testutils';
+ import { PromiseDelegate } from '@lumino/coreutils';
+ import { Widget } from '@lumino/widgets';
+ import { simulate } from 'simulate-event';
+@@ -18,7 +18,7 @@
+   NotebookActions,
+   NotebookPanel,
+   ToolbarItems
+-} from '@jupyterlab/notebook';
++} from '..';
+ import * as utils from './utils';
+ 
+ const JUPYTER_CELL_MIME = 'application/vnd.jupyter.cells';
+@@ -32,7 +32,6 @@
+       beforeEach(async () => {
+         context = await utils.createMockContext();
+         panel = utils.createNotebookPanel(context);
+-        panel.content.notebookConfig.windowingMode = 'none';
+         context.model.fromJSON(utils.DEFAULT_CONTENT);
+       });
+ 
+@@ -47,9 +46,8 @@
+           Widget.attach(button, document.body);
+           const promise = signalToPromise(context.fileChanged);
+           await framePromise();
+-          await button.renderPromise;
+-          simulate(button.node.firstChild as HTMLElement, 'mousedown');
+-          await expect(promise).resolves.not.toThrow();
++          simulate(button.node.firstChild as HTMLElement, 'mousedown');
++          await promise;
+           button.dispose();
+         });
+ 
+@@ -68,7 +66,6 @@
+           const button = ToolbarItems.createInsertButton(panel);
+           Widget.attach(button, document.body);
+           await framePromise();
+-          await button.renderPromise;
+           simulate(button.node.firstChild as HTMLElement, 'mousedown');
+           expect(panel.content.activeCellIndex).toBe(1);
+           expect(panel.content.activeCell).toBeInstanceOf(CodeCell);
+@@ -90,7 +87,6 @@
+           const count = panel.content.widgets.length;
+           Widget.attach(button, document.body);
+           await framePromise();
+-          await button.renderPromise;
+           simulate(button.node.firstChild as HTMLElement, 'mousedown');
+           expect(panel.content.widgets.length).toBe(count - 1);
+           expect(utils.clipboard.hasData(JUPYTER_CELL_MIME)).toBe(true);
+@@ -112,7 +108,6 @@
+           const count = panel.content.widgets.length;
+           Widget.attach(button, document.body);
+           await framePromise();
+-          await button.renderPromise;
+           simulate(button.node.firstChild as HTMLElement, 'mousedown');
+           expect(panel.content.widgets.length).toBe(count);
+           expect(utils.clipboard.hasData(JUPYTER_CELL_MIME)).toBe(true);
+@@ -136,7 +131,6 @@
+           const count = panel.content.widgets.length;
+           Widget.attach(button, document.body);
+           await framePromise();
+-          await button.renderPromise;
+           NotebookActions.copy(panel.content);
+           simulate(button.node.firstChild as HTMLElement, 'mousedown');
+           await sleep();
+@@ -160,14 +154,12 @@
+           const item = ToolbarItems.createCellTypeItem(panel);
+           Widget.attach(item, document.body);
+           await framePromise();
+-          await item.renderPromise;
+           const node = item.node.getElementsByTagName(
+             'select'
+           )[0] as HTMLSelectElement;
+           expect(node.value).toBe('code');
+           panel.content.activeCellIndex++;
+           await framePromise();
+-          await item.renderPromise;
+           expect(node.value).toBe('markdown');
+           item.dispose();
+         });
+@@ -176,14 +168,12 @@
+           const item = ToolbarItems.createCellTypeItem(panel);
+           Widget.attach(item, document.body);
+           await framePromise();
+-          await item.renderPromise;
+           const node = item.node.getElementsByTagName(
+             'select'
+           )[0] as HTMLSelectElement;
+           expect(node.value).toBe('code');
+           panel.content.select(panel.content.widgets[1]);
+           await framePromise();
+-          await item.renderPromise;
+           expect(node.value).toBe('-');
+           item.dispose();
+         });
+@@ -192,15 +182,14 @@
+           const item = ToolbarItems.createCellTypeItem(panel);
+           Widget.attach(item, document.body);
+           await framePromise();
+-          await item.renderPromise;
+           const node = item.node.getElementsByTagName(
+             'select'
+           )[0] as HTMLSelectElement;
+           expect(node.value).toBe('code');
+-          panel.model!.sharedModel.insertCell(0, { cell_type: 'code' });
++          const cell = panel.model!.contentFactory.createCodeCell({});
++          panel.model!.cells.insert(1, cell);
+           panel.content.select(panel.content.widgets[1]);
+           await framePromise();
+-          await item.renderPromise;
+           expect(node.value).toBe('code');
+           item.dispose();
+         });
+@@ -261,7 +250,6 @@
+           widget.select(mdCell);
+ 
+           Widget.attach(button, document.body);
+-          await button.renderPromise;
+           await context.sessionContext.session!.kernel!.info;
+ 
+           const delegate = new PromiseDelegate();
+@@ -271,7 +259,7 @@
+             }
+           });
+           simulate(button.node.firstChild as HTMLElement, 'mousedown');
+-          await expect(delegate.promise).resolves.not.toThrow();
++          await delegate.promise;
+           button.dispose();
+         });
+ 
+@@ -295,7 +283,6 @@
+           mdCell.rendered = false;
+ 
+           Widget.attach(button, document.body);
+-          await button.renderPromise;
+           await panel.sessionContext.ready;
+           const delegate = new PromiseDelegate();
+           panel.sessionContext.iopubMessage.connect((_, msg) => {
+@@ -305,7 +292,7 @@
+           });
+           simulate(button.node.firstChild as HTMLElement, 'mousedown');
+           await acceptDialog();
+-          await expect(delegate.promise).resolves.not.toThrow();
++          await delegate.promise;
+           button.dispose();
+         });
+ 

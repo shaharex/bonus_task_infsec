@@ -1,0 +1,29 @@
+--- packages\debugger\src\handlers\file.ts (old)
++++ packages\debugger\src\handlers\file.ts (new)
+@@ -26,15 +26,10 @@
+     this._debuggerService = options.debuggerService;
+     this._fileEditor = options.widget.content;
+ 
+-    this._hasLineNumber =
+-      (this._fileEditor.editor.getOption('lineNumbers') as
+-        | boolean
+-        | undefined) ?? false;
++    this._hasLineNumber = this._fileEditor.editor.getOption('lineNumbers');
+     this._editorHandler = new EditorHandler({
+       debuggerService: this._debuggerService,
+-      editorReady: () => Promise.resolve(this._fileEditor.editor),
+-      getEditor: () => this._fileEditor.editor,
+-      src: this._fileEditor.model.sharedModel
++      editor: this._fileEditor.editor
+     });
+   }
+ 
+@@ -53,7 +48,7 @@
+     this.isDisposed = true;
+     this._editorHandler?.dispose();
+     // Restore editor options
+-    this._editorHandler?.editor!.setOptions({
++    this._editorHandler?.editor.setOptions({
+       lineNumbers: this._hasLineNumber
+     });
+     Signal.clearData(this);

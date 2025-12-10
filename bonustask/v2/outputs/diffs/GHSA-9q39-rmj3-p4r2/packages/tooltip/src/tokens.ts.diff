@@ -1,0 +1,28 @@
+--- packages\tooltip\src\tokens.ts (old)
++++ packages\tooltip\src\tokens.ts (new)
+@@ -7,13 +7,14 @@
+ import { Token } from '@lumino/coreutils';
+ import { Widget } from '@lumino/widgets';
+ 
++/* tslint:disable */
+ /**
+  * The tooltip manager token.
+  */
+ export const ITooltipManager = new Token<ITooltipManager>(
+-  '@jupyterlab/tooltip:ITooltipManager',
+-  'A service for the tooltip manager for the application. Use this to allow your extension to invoke a tooltip.'
++  '@jupyterlab/tooltip:ITooltipManager'
+ );
++/* tslint:enable */
+ 
+ /**
+  * A manager to register tooltips with parent widgets.
+@@ -26,7 +27,7 @@
+ }
+ 
+ /**
+- * A namespace for `ITooltipManager` interface specifications.
++ * A namespace for `ICompletionManager` interface specifications.
+  */
+ export namespace ITooltipManager {
+   /**

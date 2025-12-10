@@ -1,0 +1,20 @@
+--- packages\services\test\manager.spec.ts (old)
++++ packages\services\test\manager.spec.ts (new)
+@@ -1,7 +1,7 @@
+ // Copyright (c) Jupyter Development Team.
+ // Distributed under the terms of the Modified BSD License.
+ 
+-import { JupyterServer } from '@jupyterlab/testing';
++import { JupyterServer } from '@jupyterlab/testutils';
+ import {
+   ContentsManager,
+   ServiceManager,
+@@ -15,7 +15,7 @@
+ 
+ beforeAll(async () => {
+   await server.start();
+-}, 30000);
++});
+ 
+ afterAll(async () => {
+   await server.shutdown();

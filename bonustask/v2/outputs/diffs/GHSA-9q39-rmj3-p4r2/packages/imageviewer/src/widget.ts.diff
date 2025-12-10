@@ -1,0 +1,11 @@
+--- packages\imageviewer\src\widget.ts (old)
++++ packages\imageviewer\src\widget.ts (new)
+@@ -59,7 +59,7 @@
+    * Print in iframe.
+    */
+   [Printing.symbol]() {
+-    return (): Promise<void> => Printing.printWidget(this);
++    return () => Printing.printWidget(this);
+   }
+ 
+   /**

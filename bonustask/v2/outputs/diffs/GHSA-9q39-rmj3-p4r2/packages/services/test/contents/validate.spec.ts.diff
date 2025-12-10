@@ -1,0 +1,48 @@
+--- packages\services\test\contents\validate.spec.ts (old)
++++ packages\services\test\contents\validate.spec.ts (new)
+@@ -10,39 +10,35 @@
+ describe('validate', () => {
+   describe('validateContentsModel()', () => {
+     it('should pass with valid data', () => {
+-      expect(() => {
+-        validateContentsModel(DEFAULT_FILE);
+-      }).not.toThrow();
++      validateContentsModel(DEFAULT_FILE);
+     });
+ 
+     it('should fail on missing data', () => {
+       const model = JSON.parse(JSON.stringify(DEFAULT_FILE));
+       delete model['path'];
+-      expect(() => validateContentsModel(model)).toThrow();
++      expect(() => validateContentsModel(model)).toThrowError();
+     });
+ 
+     it('should fail on incorrect data', () => {
+       const model = JSON.parse(JSON.stringify(DEFAULT_FILE));
+       model.type = 1;
+-      expect(() => validateContentsModel(model)).toThrow();
++      expect(() => validateContentsModel(model)).toThrowError();
+     });
+   });
+ 
+   describe('validateCheckpointModel()', () => {
+     it('should pass with valid data', () => {
+-      expect(() => {
+-        validateCheckpointModel({ id: 'foo', last_modified: 'yesterday ' });
+-      }).not.toThrow();
++      validateCheckpointModel({ id: 'foo', last_modified: 'yesterday ' });
+     });
+ 
+     it('should fail on missing data', () => {
+       const model = { id: 'foo' };
+-      expect(() => validateCheckpointModel(model as any)).toThrow();
++      expect(() => validateCheckpointModel(model as any)).toThrowError();
+     });
+ 
+     it('should fail on incorrect data', () => {
+       const model = { id: 1, last_modified: '1' };
+-      expect(() => validateCheckpointModel(model as any)).toThrow();
++      expect(() => validateCheckpointModel(model as any)).toThrowError();
+     });
+   });
+ });

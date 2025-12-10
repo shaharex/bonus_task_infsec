@@ -1,0 +1,23 @@
+--- testutils\src\babel.config.ts (old)
++++ testutils\src\babel.config.ts (new)
+@@ -1,8 +1,12 @@
+-/*
+- * Copyright (c) Jupyter Development Team.
+- * Distributed under the terms of the Modified BSD License.
+- */
+-
+-import * as config from '@jupyterlab/testing/lib/babel-config';
+-
+-module.exports = config;
++module.exports = {
++  presets: [
++    [
++      '@babel/preset-env',
++      {
++        targets: {
++          node: 'current'
++        }
++      }
++    ]
++  ]
++};

@@ -1,0 +1,116 @@
+--- packages\codemirror\test\factory.spec.ts (old)
++++ packages\codemirror\test\factory.spec.ts (new)
+@@ -4,40 +4,30 @@
+ import { CodeEditor } from '@jupyterlab/codeeditor';
+ import {
+   CodeMirrorEditor,
+-  CodeMirrorEditorFactory,
+-  EditorExtensionRegistry,
+-  EditorLanguageRegistry,
+-  IEditorExtensionRegistry
++  CodeMirrorEditorFactory
+ } from '@jupyterlab/codemirror';
+-import { YFile } from '@jupyter/ydoc';
++
++class ExposeCodeMirrorEditorFactory extends CodeMirrorEditorFactory {
++  public inlineCodeMirrorConfig: CodeMirrorEditor.IConfig;
++  public documentCodeMirrorConfig: CodeMirrorEditor.IConfig;
++}
+ 
+ describe('CodeMirrorEditorFactory', () => {
+   let host: HTMLElement;
+   let model: CodeEditor.IModel;
+-  let extensions: IEditorExtensionRegistry;
+ 
+-  const defaults: Record<string, any> = {
++  const options: Partial<CodeMirrorEditor.IConfig> = {
+     lineNumbers: false,
+-    lineWrap: true
++    lineWrap: 'on',
++    extraKeys: {
++      'Ctrl-Tab': 'indentAuto'
++    }
+   };
+ 
+   beforeEach(() => {
+     host = document.createElement('div');
+     document.body.appendChild(host);
+-    extensions = new EditorExtensionRegistry();
+-    extensions.addExtension({
+-      name: 'lineNumbers',
+-      default: true,
+-      factory: () => EditorExtensionRegistry.createImmutableExtension([])
+-    });
+-    extensions.addExtension({
+-      name: 'lineWrap',
+-      default: false,
+-      factory: () => EditorExtensionRegistry.createImmutableExtension([])
+-    });
+-    model = new CodeEditor.Model({
+-      sharedModel: new YFile()
+-    });
++    model = new CodeEditor.Model();
+   });
+ 
+   afterEach(() => {
+@@ -51,12 +41,14 @@
+     });
+ 
+     it('should create a CodeMirrorEditorFactory with options', () => {
+-      const languages = new EditorLanguageRegistry();
+-      const findBest = jest.spyOn(languages, 'findBest');
+-      const factory = new CodeMirrorEditorFactory({ languages });
++      const factory = new ExposeCodeMirrorEditorFactory(options);
+       expect(factory).toBeInstanceOf(CodeMirrorEditorFactory);
+-      factory.newInlineEditor({ host, model });
+-      expect(findBest).toHaveBeenCalled();
++      expect(factory.inlineCodeMirrorConfig.extraKeys).toEqual(
++        options.extraKeys
++      );
++      expect(factory.documentCodeMirrorConfig.extraKeys).toEqual(
++        options.extraKeys
++      );
+     });
+   });
+ 
+@@ -69,15 +61,15 @@
+     });
+ 
+     it('should create a new editor with given options', () => {
+-      const factory = new CodeMirrorEditorFactory();
++      const factory = new CodeMirrorEditorFactory(options);
+       const editor = factory.newInlineEditor({
+         host,
+         model
+       }) as CodeMirrorEditor;
+       expect(editor).toBeInstanceOf(CodeMirrorEditor);
+-      for (const key in Object.keys(defaults)) {
+-        const option = key as keyof Record<string, any>;
+-        expect(editor.getOption(option)).toBe(defaults[option]);
++      for (const key in Object.keys(options)) {
++        const option = key as keyof CodeMirrorEditor.IConfig;
++        expect(editor.getOption(option)).toBe(options[option]);
+       }
+       editor.dispose();
+     });
+@@ -92,15 +84,15 @@
+     });
+ 
+     it('should create a new editor with given options', () => {
+-      const factory = new CodeMirrorEditorFactory({ extensions });
++      const factory = new CodeMirrorEditorFactory(options);
+       const editor = factory.newDocumentEditor({
+         host,
+-        model,
+-        config: defaults
++        model
+       }) as CodeMirrorEditor;
+       expect(editor).toBeInstanceOf(CodeMirrorEditor);
+-      for (const key in Object.keys(defaults)) {
+-        expect(editor.getOption(key)).toBe(defaults[key]);
++      for (const key in Object.keys(options)) {
++        const option = key as keyof CodeMirrorEditor.IConfig;
++        expect(editor.getOption(option)).toBe(options[option]);
+       }
+       editor.dispose();
+     });

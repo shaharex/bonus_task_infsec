@@ -1,0 +1,20 @@
+--- packages\ui-components\src\components\switch.ts (old)
++++ packages\ui-components\src\components\switch.ts (new)
+@@ -33,7 +33,7 @@
+   /**
+    * The value of the switch.
+    */
+-  get value(): boolean {
++  get value() {
+     return this._value;
+   }
+   set value(newValue: boolean) {
+@@ -88,7 +88,7 @@
+     this._button.addEventListener('click', this);
+   }
+ 
+-  protected onBeforeDetach(): void {
++  protected onBeforeDetach() {
+     this._button.removeEventListener('click', this);
+   }
+ 

@@ -1,0 +1,28 @@
+--- packages\services\webpack.config.js (old)
++++ packages\services\webpack.config.js (new)
+@@ -1,9 +1,10 @@
+-/*
+- * Copyright (c) Jupyter Development Team.
+- * Distributed under the terms of the Modified BSD License.
+- */
++const version = require('./package.json').version;
++const crypto = require('crypto');
+ 
+-const version = require('./package.json').version;
++// Workaround for loaders using "md4" by default, which is not supported in FIPS-compliant OpenSSL
++const cryptoOrigCreateHash = crypto.createHash;
++crypto.createHash = algorithm =>
++  cryptoOrigCreateHash(algorithm == 'md4' ? 'sha256' : algorithm);
+ 
+ module.exports = {
+   entry: './lib',
+@@ -12,7 +13,8 @@
+     library: '@jupyterlab/services',
+     libraryTarget: 'umd',
+     umdNamedDefine: true,
+-    publicPath: 'https://unpkg.com/@jupyterlab/services@' + version + '/dist/'
++    publicPath: 'https://unpkg.com/@jupyterlab/services@' + version + '/dist/',
++    hashFunction: 'sha256'
+   },
+   bail: true,
+   mode: 'production',

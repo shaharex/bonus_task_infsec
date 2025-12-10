@@ -1,0 +1,72 @@
+--- packages\services\src\kernel\kernel.ts (old)
++++ packages\services\src\kernel\kernel.ts (new)
+@@ -1,5 +1,7 @@
+ // Copyright (c) Jupyter Development Team.
+ // Distributed under the terms of the Modified BSD License.
++
++import { IIterator } from '@lumino/algorithm';
+ 
+ import { JSONObject, JSONValue } from '@lumino/coreutils';
+ 
+@@ -175,7 +177,7 @@
+    * @returns A promise that resolves when the kernel has interrupted.
+    *
+    * #### Notes
+-   * Uses the [Jupyter Server API](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/services/api/api.yaml#!/kernels).
++   * Uses the [Jupyter Notebook API](http://petstore.swagger.io/?url=https://raw.githubusercontent.com/jupyter/notebook/master/notebook/services/api/api.yaml#!/kernels).
+    *
+    * The promise is fulfilled on a valid response and rejected otherwise.
+    *
+@@ -192,7 +194,7 @@
+    * @returns A promise that resolves when the kernel has restarted.
+    *
+    * #### Notes
+-   * Uses the [Jupyter Server API](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/services/api/api.yaml#!/kernels) and validates the response model.
++   * Uses the [Jupyter Notebook API](http://petstore.swagger.io/?url=https://raw.githubusercontent.com/jupyter/notebook/master/notebook/services/api/api.yaml#!/kernels) and validates the response model.
+    *
+    * Any existing Future or Comm objects are cleared.
+    *
+@@ -361,13 +363,15 @@
+    * Send an `input_reply` message.
+    *
+    * @param content - The content of the reply.
++   * @param parent_header - The parent message header.
+    *
+    * #### Notes
+    * See [Messaging in Jupyter](https://jupyter-client.readthedocs.io/en/latest/messaging.html#messages-on-the-stdin-router-dealer-sockets).
++   * In v7.0.0, the `parent_header` argument will become mandatory.
+    */
+   sendInputReply(
+     content: KernelMessage.IInputReplyMsg['content'],
+-    parent_header: KernelMessage.IInputReplyMsg['parent_header']
++    parent_header?: KernelMessage.IInputReplyMsg['parent_header']
+   ): void;
+ 
+   /**
+@@ -518,7 +522,7 @@
+    *
+    * #### Notes
+    * Uses the [Jupyter Notebook
+-   * API](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/services/api/api.yaml#!/kernels).
++   * API](http://petstore.swagger.io/?url=https://raw.githubusercontent.com/jupyter/notebook/master/notebook/services/api/api.yaml#!/kernels).
+    *
+    * On a valid response, closes the websocket, disposes of the kernel
+    * object, and fulfills the promise.
+@@ -615,7 +619,7 @@
+    *
+    * @returns A new iterator over the running kernels.
+    */
+-  running(): IterableIterator<IModel>;
++  running(): IIterator<IModel>;
+ 
+   /**
+    * Force a refresh of the running kernels.
+@@ -778,7 +782,7 @@
+    */
+   sendInputReply(
+     content: KernelMessage.IInputReplyMsg['content'],
+-    parent_header: KernelMessage.IInputReplyMsg['parent_header']
++    parent_header?: KernelMessage.IInputReplyMsg['parent_header']
+   ): void;
+ }
+ 

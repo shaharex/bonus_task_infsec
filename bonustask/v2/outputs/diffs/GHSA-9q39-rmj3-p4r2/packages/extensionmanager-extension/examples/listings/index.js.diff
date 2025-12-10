@@ -1,0 +1,11 @@
+--- packages\extensionmanager-extension\examples\listings\index.js (old)
++++ packages\extensionmanager-extension\examples\listings\index.js (new)
+@@ -29,7 +29,7 @@
+     require('@jupyterlab/launcher-extension'),
+     require('@jupyterlab/mainmenu-extension'),
+     require('@jupyterlab/markdownviewer-extension'),
+-    require('@jupyterlab/mathjax-extension'),
++    require('@jupyterlab/mathjax2-extension'),
+     require('@jupyterlab/notebook-extension'),
+     require('@jupyterlab/rendermime-extension'),
+     require('@jupyterlab/running-extension'),

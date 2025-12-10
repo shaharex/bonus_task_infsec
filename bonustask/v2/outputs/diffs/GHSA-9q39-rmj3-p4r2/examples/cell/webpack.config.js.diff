@@ -1,0 +1,77 @@
+--- examples\cell\webpack.config.js (old)
++++ examples\cell\webpack.config.js (new)
+@@ -1,16 +1,17 @@
+-/*
+- * Copyright (c) Jupyter Development Team.
+- * Distributed under the terms of the Modified BSD License.
+- */
++const webpack = require('webpack');
++const crypto = require('crypto');
+ 
+-const webpack = require('webpack');
+-const miniSVGDataURI = require('mini-svg-data-uri');
++// Workaround for loaders using "md4" by default, which is not supported in FIPS-compliant OpenSSL
++const cryptoOrigCreateHash = crypto.createHash;
++crypto.createHash = algorithm =>
++  cryptoOrigCreateHash(algorithm == 'md4' ? 'sha256' : algorithm);
+ 
+ module.exports = {
+-  entry: ['./build/index.js'],
++  entry: ['whatwg-fetch', './build/index.js'],
+   output: {
+     path: __dirname + '/build',
+-    filename: 'bundle.js'
++    filename: 'bundle.js',
++    hashFunction: 'sha256'
+   },
+   bail: true,
+   devtool: 'cheap-source-map',
+@@ -18,16 +19,16 @@
+   module: {
+     rules: [
+       { test: /\.css$/, use: ['style-loader', 'css-loader'] },
+-      { test: /\.html$/, type: 'asset/resource' },
+-      { test: /\.md$/, type: 'asset/source' },
+-      { test: /\.js.map$/, type: 'asset/resource' },
++      { test: /\.html$/, use: 'file-loader' },
++      { test: /\.md$/, use: 'raw-loader' },
++      { test: /\.js.map$/, use: 'file-loader' },
+       {
+         // In .css files, svg is loaded as a data URI.
+         test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
+         issuer: /\.css$/,
+-        type: 'asset',
+-        generator: {
+-          dataUrl: content => miniSVGDataURI(content.toString())
++        use: {
++          loader: 'svg-url-loader',
++          options: { encoding: 'none', limit: 10000 }
+         }
+       },
+       {
+@@ -35,18 +36,22 @@
+         // must be loaded as a raw string instead of data URIs.
+         test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
+         issuer: /\.js$/,
+-        type: 'asset/source'
++        use: {
++          loader: 'raw-loader'
++        }
+       },
+       {
+         test: /\.(png|jpg|gif|ttf|woff|woff2|eot)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+-        type: 'asset'
++        use: [{ loader: 'url-loader', options: { limit: 10000 } }]
+       }
+     ]
+   },
+   plugins: [
+     new webpack.DefinePlugin({
++      // Needed for Blueprint. See https://github.com/palantir/blueprint/issues/4393
++      'process.env': '{}',
+       // Needed for various packages using cwd(), like the path polyfill
+-      process: { cwd: () => '/', env: {} }
++      process: { cwd: () => '/' }
+     })
+   ]
+ };

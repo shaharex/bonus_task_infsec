@@ -1,0 +1,194 @@
+--- packages\apputils\src\toolbar\factory.ts (old)
++++ packages\apputils\src\toolbar\factory.ts (new)
+@@ -1,17 +1,12 @@
+-/*
+- * Copyright (c) Jupyter Development Team.
+- * Distributed under the terms of the Modified BSD License.
+- */
+-
+ import { IObservableList, ObservableList } from '@jupyterlab/observables';
+ import { ISettingRegistry, SettingRegistry } from '@jupyterlab/settingregistry';
+ import { ITranslator, TranslationBundle } from '@jupyterlab/translation';
+-import { Toolbar } from '@jupyterlab/ui-components';
+-import { findIndex } from '@lumino/algorithm';
++import { findIndex, toArray } from '@lumino/algorithm';
+ import { JSONExt, PartialJSONObject } from '@lumino/coreutils';
+ import { Widget } from '@lumino/widgets';
+ import { Dialog, showDialog } from '../dialog';
+ import { IToolbarWidgetRegistry, ToolbarRegistry } from '../tokens';
++import { Toolbar } from './widget';
+ 
+ /**
+  * Default toolbar item rank
+@@ -103,16 +98,17 @@
+       // Apply default value as last step to take into account overrides.json
+       // The standard toolbars default is [] as the plugin must use
+       // `jupyter.lab.toolbars.<factory>` to define its default value.
+-      schema.properties![propertyId].default =
+-        SettingRegistry.reconcileToolbarItems(
+-          pluginDefaults,
+-          schema.properties![propertyId].default as any[],
+-          true
+-        )!.sort(
+-          (a, b) =>
+-            (a.rank ?? DEFAULT_TOOLBAR_ITEM_RANK) -
+-            (b.rank ?? DEFAULT_TOOLBAR_ITEM_RANK)
+-        );
++      schema.properties![
++        propertyId
++      ].default = SettingRegistry.reconcileToolbarItems(
++        pluginDefaults,
++        schema.properties![propertyId].default as any[],
++        true
++      )!.sort(
++        (a, b) =>
++          (a.rank ?? DEFAULT_TOOLBAR_ITEM_RANK) -
++          (b.rank ?? DEFAULT_TOOLBAR_ITEM_RANK)
++      );
+     }
+ 
+     // Transform the plugin object to return different schema than the default.
+@@ -220,13 +216,9 @@
+         await displayInformation(trans);
+       } else {
+         if (newItems.length > 0) {
+-          // Empty the default values to avoid toolbar settings collisions.
+           canonical = null;
+-          const schema = registry.plugins[pluginId]!.schema;
+-          schema.properties!.toolbar.default = [];
+-
+-          // Run again the transformations.
+-          await registry.load(pluginId, true);
++          // This will trigger a settings.changed signal that will update the items
++          await registry.reload(pluginId);
+         }
+       }
+     }
+@@ -303,27 +295,8 @@
+       }
+     };
+ 
+-    const updateWidget = (
+-      registry: IToolbarWidgetRegistry,
+-      itemName: string
+-    ) => {
+-      const itemIndex = Array.from(items).findIndex(
+-        item => item.name === itemName
+-      );
+-      if (itemIndex >= 0) {
+-        toolbar.set(itemIndex, {
+-          name: itemName,
+-          widget: toolbarRegistry.createWidget(
+-            factoryName,
+-            widget,
+-            items.get(itemIndex)
+-          )
+-        });
+-      }
+-    };
+-
+     const toolbar = new ObservableList<ToolbarRegistry.IToolbarItem>({
+-      values: Array.from(items).map(item => {
++      values: toArray(items).map(item => {
+         return {
+           name: item.name,
+           widget: toolbarRegistry.createWidget(factoryName, widget, item)
+@@ -331,14 +304,9 @@
+       })
+     });
+ 
+-    // Re-render the widget if a new factory has been added.
+-    toolbarRegistry.factoryAdded.connect(updateWidget);
+-
+     items.changed.connect(updateToolbar);
+-
+     widget.disposed.connect(() => {
+       items.changed.disconnect(updateToolbar);
+-      toolbarRegistry.factoryAdded.disconnect(updateWidget);
+     });
+ 
+     return toolbar;
+@@ -350,33 +318,24 @@
+  *
+  * @param widget Widget with the toolbar to set
+  * @param factory Toolbar items factory
+- * @param toolbar Separated toolbar if widget is a raw widget
+  */
+ export function setToolbar(
+-  widget: Toolbar.IWidgetToolbar | Widget,
++  widget: Toolbar.IWidgetToolbar,
+   factory: (
+     widget: Widget
+   ) =>
+     | IObservableList<ToolbarRegistry.IToolbarItem>
+-    | ToolbarRegistry.IToolbarItem[],
+-  toolbar?: Toolbar
++    | ToolbarRegistry.IToolbarItem[]
+ ): void {
+-  // @ts-expect-error Widget has no toolbar
+-  if (!widget.toolbar && !toolbar) {
+-    console.log(
+-      `Widget ${widget.id} has no 'toolbar' and no explicit toolbar was provided.`
+-    );
++  if (!widget.toolbar) {
++    console.log(`Widget ${widget.id} has no 'toolbar'.`);
+     return;
+   }
+-
+-  // @ts-expect-error Widget has no toolbar
+-  const toolbar_ = (widget.toolbar as Toolbar) ?? toolbar;
+-
+   const items = factory(widget);
+ 
+   if (Array.isArray(items)) {
+     items.forEach(({ name, widget: item }) => {
+-      toolbar_.addItem(name, item);
++      widget.toolbar!.addItem(name, item);
+     });
+   } else {
+     const updateToolbar = (
+@@ -386,7 +345,7 @@
+       switch (changes.type) {
+         case 'add':
+           changes.newValues.forEach((item, index) => {
+-            toolbar_.insertItem(
++            widget.toolbar!.insertItem(
+               changes.newIndex + index,
+               item.name,
+               item.widget
+@@ -398,7 +357,7 @@
+             item.widget.parent = null;
+           });
+           changes.newValues.forEach((item, index) => {
+-            toolbar_.insertItem(
++            widget.toolbar!.insertItem(
+               changes.newIndex + index,
+               item.name,
+               item.widget
+@@ -417,14 +376,14 @@
+ 
+           changes.newValues.forEach((item, index) => {
+             const existingIndex = findIndex(
+-              toolbar_.names(),
++              widget.toolbar!.names(),
+               name => item.name === name
+             );
+             if (existingIndex >= 0) {
+-              Array.from(toolbar_.children())[existingIndex].parent = null;
++              toArray(widget.toolbar!.children())[existingIndex].parent = null;
+             }
+ 
+-            toolbar_.insertItem(
++            widget.toolbar!.insertItem(
+               changes.newIndex + index,
+               item.name,
+               item.widget
+@@ -436,7 +395,7 @@
+ 
+     updateToolbar(items, {
+       newIndex: 0,
+-      newValues: Array.from(items),
++      newValues: toArray(items),
+       oldIndex: 0,
+       oldValues: [],
+       type: 'add'

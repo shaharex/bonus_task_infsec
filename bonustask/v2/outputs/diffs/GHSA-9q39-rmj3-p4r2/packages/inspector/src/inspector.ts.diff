@@ -1,0 +1,21 @@
+--- packages\inspector\src\inspector.ts (old)
++++ packages\inspector\src\inspector.ts (new)
+@@ -30,8 +30,7 @@
+  */
+ export class InspectorPanel
+   extends Panel
+-  implements IInspector, Printing.IPrintable
+-{
++  implements IInspector, Printing.IPrintable {
+   /**
+    * Construct an inspector.
+    */
+@@ -62,7 +61,7 @@
+    * Print in iframe
+    */
+   [Printing.symbol]() {
+-    return (): Promise<void> => Printing.printWidget(this);
++    return () => Printing.printWidget(this);
+   }
+ 
+   /**

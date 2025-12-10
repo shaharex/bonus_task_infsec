@@ -1,0 +1,18 @@
+--- galata\test\galata\test.spec.ts (old)
++++ galata\test\galata\test.spec.ts (new)
+@@ -1,11 +1,9 @@
+-/*
+- * Copyright (c) Jupyter Development Team.
+- * Distributed under the terms of the Modified BSD License.
+- * Copyright (c) Bloomberg Finance LP.
+- */
++// Copyright (c) Jupyter Development Team.
++// Copyright (c) Bloomberg Finance LP.
++// Distributed under the terms of the Modified BSD License.
+ 
+ import { expect, test } from '@jupyterlab/galata';
+ 
+ test('should display the launcher', async ({ page }) => {
+-  await expect(page.launcher).toBeVisible();
++  expect(await page.waitForSelector(page.launcherSelector)).toBeTruthy();
+ });

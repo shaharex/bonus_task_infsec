@@ -1,0 +1,5 @@
+--- jupyterlab\handlers\__init__.py (old)
++++ jupyterlab\handlers\__init__.py (new)
+@@ -1,2 +0,0 @@
+-# Copyright (c) Jupyter Development Team.
+-# Distributed under the terms of the Modified BSD License.

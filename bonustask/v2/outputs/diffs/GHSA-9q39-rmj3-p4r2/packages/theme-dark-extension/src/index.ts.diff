@@ -1,0 +1,10 @@
+--- packages\theme-dark-extension\src\index.ts (old)
++++ packages\theme-dark-extension\src\index.ts (new)
+@@ -17,7 +17,6 @@
+  */
+ const plugin: JupyterFrontEndPlugin<void> = {
+   id: '@jupyterlab/theme-dark-extension:plugin',
+-  description: 'Adds a dark theme.',
+   requires: [IThemeManager, ITranslator],
+   activate: (
+     app: JupyterFrontEnd,

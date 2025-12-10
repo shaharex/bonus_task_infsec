@@ -1,0 +1,8 @@
+--- packages\settingeditor-extension\style\index.js (old)
++++ packages\settingeditor-extension\style\index.js (new)
+@@ -9,5 +9,4 @@
+ import '@jupyterlab/codeeditor/style/index.js';
+ import '@jupyterlab/rendermime/style/index.js';
+ import '@jupyterlab/application/style/index.js';
+-import '@jupyterlab/pluginmanager/style/index.js';
+ import '@jupyterlab/settingeditor/style/index.js';

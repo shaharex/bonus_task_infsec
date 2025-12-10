@@ -1,0 +1,127 @@
+--- packages\cells\src\inputarea.ts (old)
++++ packages\cells\src\inputarea.ts (new)
+@@ -9,6 +9,8 @@
+ 
+ import { CodeEditor, CodeEditorWrapper } from '@jupyterlab/codeeditor';
+ 
++import { CodeMirrorEditorFactory } from '@jupyterlab/codemirror';
++
+ import { ICellModel } from './model';
+ 
+ /**
+@@ -45,25 +47,28 @@
+   constructor(options: InputArea.IOptions) {
+     super();
+     this.addClass(INPUT_AREA_CLASS);
+-    const { contentFactory, editorOptions, model } = options;
+-    this.model = model;
+-    this.contentFactory = contentFactory;
++    const model = (this.model = options.model);
++    const contentFactory = (this.contentFactory =
++      options.contentFactory || InputArea.defaultContentFactory);
+ 
+     // Prompt
+     const prompt = (this._prompt = contentFactory.createInputPrompt());
+     prompt.addClass(INPUT_AREA_PROMPT_CLASS);
+ 
+     // Editor
+-    const editor = (this._editor = new CodeEditorWrapper({
++    const editorOptions = {
++      model,
+       factory: contentFactory.editorFactory,
+-      model,
+-      editorOptions
+-    }));
++      updateOnShow: options.updateOnShow
++    };
++    const editor = (this._editor = new CodeEditorWrapper(editorOptions));
+     editor.addClass(INPUT_AREA_EDITOR_CLASS);
+ 
+     const layout = (this.layout = new PanelLayout());
+     layout.addWidget(prompt);
+-    layout.addWidget(editor);
++    if (!options.placeholder) {
++      layout.addWidget(editor);
++    }
+   }
+ 
+   /**
+@@ -137,7 +142,7 @@
+   /**
+    * Dispose of the resources held by the widget.
+    */
+-  dispose(): void {
++  dispose() {
+     // Do nothing if already disposed.
+     if (this.isDisposed) {
+       return;
+@@ -168,13 +173,20 @@
+ 
+     /**
+      * The content factory used by the widget to create children.
+-     */
+-    contentFactory: IContentFactory;
+-
+-    /**
+-     * Editor options
+-     */
+-    editorOptions?: Omit<CodeEditor.IOptions, 'host' | 'model'>;
++     *
++     * Defaults to one that uses CodeMirror.
++     */
++    contentFactory?: IContentFactory;
++
++    /**
++     * Whether to send an update request to the editor when it is shown.
++     */
++    updateOnShow?: boolean;
++
++    /**
++     * Whether this input area is a placeholder for future rendering.
++     */
++    placeholder?: boolean;
+   }
+ 
+   /**
+@@ -207,8 +219,8 @@
+     /**
+      * Construct a `ContentFactory`.
+      */
+-    constructor(options: ContentFactory.IOptions) {
+-      this._editor = options.editorFactory;
++    constructor(options: ContentFactory.IOptions = {}) {
++      this._editor = options.editorFactory || defaultEditorFactory;
+     }
+ 
+     /**
+@@ -242,9 +254,27 @@
+        * If this is not passed, a default CodeMirror editor factory
+        * will be used.
+        */
+-      editorFactory: CodeEditor.Factory;
+-    }
+-  }
++      editorFactory?: CodeEditor.Factory;
++    }
++  }
++
++  /**
++   * A function to create the default CodeMirror editor factory.
++   */
++  function _createDefaultEditorFactory(): CodeEditor.Factory {
++    const editorServices = new CodeMirrorEditorFactory();
++    return editorServices.newInlineEditor;
++  }
++
++  /**
++   * The default editor factory singleton based on CodeMirror.
++   */
++  export const defaultEditorFactory: CodeEditor.Factory = _createDefaultEditorFactory();
++
++  /**
++   * The default `ContentFactory` instance.
++   */
++  export const defaultContentFactory = new ContentFactory({});
+ }
+ 
+ /** ****************************************************************************

@@ -1,0 +1,11 @@
+ghsa_id,ecosystem,source_code_location,vulnerable_version_old,vulnerable_version_new,patched_version_old,patched_version_new,git_diff_path,gumtree_diff_paths,localized_hunks,prompts_dir
+GHSA-7pq5-qcp6-mcww,,outputs\workspace\GHSA-7pq5-qcp6-mcww_ckan,None,,None,None,outputs\diffs\GHSA-7pq5-qcp6-mcww\ckan_None_to_None.diff,[],[],outputs\prompts\GHSA-7pq5-qcp6-mcww
+GHSA-9q39-rmj3-p4r2,,outputs\workspace\GHSA-9q39-rmj3-p4r2_jupyterlab,None,,None,None,outputs\diffs\GHSA-9q39-rmj3-p4r2\jupyterlab_None_to_None.diff,[],[],outputs\prompts\GHSA-9q39-rmj3-p4r2
+GHSA-r2hr-4v48-fjv3,,outputs\workspace\GHSA-r2hr-4v48-fjv3_nautobot,None,,None,None,outputs\diffs\GHSA-r2hr-4v48-fjv3\nautobot_None_to_None.diff,[],[],outputs\prompts\GHSA-r2hr-4v48-fjv3
+GHSA-jxgr-gcj5-cqqg,,outputs\workspace\GHSA-jxgr-gcj5-cqqg_nautobot,None,,None,None,outputs\diffs\GHSA-jxgr-gcj5-cqqg\nautobot_None_to_None.diff,[],[],outputs\prompts\GHSA-jxgr-gcj5-cqqg
+GHSA-v4xv-795h-rv4h,,outputs\workspace\GHSA-v4xv-795h-rv4h_nautobot,None,,None,None,outputs\diffs\GHSA-v4xv-795h-rv4h\nautobot_None_to_None.diff,[],[],outputs\prompts\GHSA-v4xv-795h-rv4h
+GHSA-cf9f-wmhp-v4pr,,outputs\workspace\GHSA-cf9f-wmhp-v4pr_nautobot,None,,None,None,outputs\diffs\GHSA-cf9f-wmhp-v4pr\nautobot_None_to_None.diff,[],[],outputs\prompts\GHSA-cf9f-wmhp-v4pr
+GHSA-5286-f2rf-35c2,,outputs\workspace\GHSA-5286-f2rf-35c2_wagtail,None,,None,None,outputs\diffs\GHSA-5286-f2rf-35c2\wagtail_None_to_None.diff,[],[],outputs\prompts\GHSA-5286-f2rf-35c2
+GHSA-hwvq-6gjx-j797,,outputs\workspace\GHSA-hwvq-6gjx-j797_notebook,None,,None,None,outputs\diffs\GHSA-hwvq-6gjx-j797\notebook_None_to_None.diff,[],[],outputs\prompts\GHSA-hwvq-6gjx-j797
+GHSA-wq5h-f9p5-q7fx,,outputs\workspace\GHSA-wq5h-f9p5-q7fx_wagtail,None,,None,None,outputs\diffs\GHSA-wq5h-f9p5-q7fx\wagtail_None_to_None.diff,[],[],outputs\prompts\GHSA-wq5h-f9p5-q7fx
+GHSA-2473-9hgq-j7xw,,outputs\workspace\GHSA-2473-9hgq-j7xw_wagtail,None,,None,None,outputs\diffs\GHSA-2473-9hgq-j7xw\wagtail_None_to_None.diff,[],[],outputs\prompts\GHSA-2473-9hgq-j7xw

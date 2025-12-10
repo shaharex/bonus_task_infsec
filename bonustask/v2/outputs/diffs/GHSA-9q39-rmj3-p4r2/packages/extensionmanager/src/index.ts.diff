@@ -1,0 +1,9 @@
+--- packages\extensionmanager\src\index.ts (old)
++++ packages\extensionmanager\src\index.ts (new)
+@@ -6,4 +6,6 @@
+  */
+ 
+ export * from './model';
++export * from './npm';
++export * from './listings';
+ export * from './widget';

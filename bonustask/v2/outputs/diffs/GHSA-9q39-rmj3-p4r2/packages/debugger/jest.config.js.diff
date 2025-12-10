@@ -1,0 +1,11 @@
+--- packages\debugger\jest.config.js (old)
++++ packages\debugger\jest.config.js (new)
+@@ -3,7 +3,7 @@
+  * Distributed under the terms of the Modified BSD License.
+  */
+ 
+-const func = require('@jupyterlab/testing/lib/jest-config');
++const func = require('@jupyterlab/testutils/lib/jest-config');
+ const config = func(__dirname);
+ config['setupFiles'].push('jest-canvas-mock');
+ module.exports = config;

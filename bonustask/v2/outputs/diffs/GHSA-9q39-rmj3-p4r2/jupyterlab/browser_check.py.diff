@@ -1,0 +1,111 @@
+--- jupyterlab\browser_check.py (old)
++++ jupyterlab\browser_check.py (new)
+@@ -1,11 +1,8 @@
+-# Copyright (c) Jupyter Development Team.
+-# Distributed under the terms of the Modified BSD License.
+-
++# -*- coding: utf-8 -*-
+ """
+ This module is meant to run JupyterLab in a headless browser, making sure
+ the application launches and starts up without errors.
+ """
+-
+ import asyncio
+ import inspect
+ import logging
+@@ -22,7 +19,7 @@
+ from tornado.ioloop import IOLoop
+ from tornado.iostream import StreamClosedError
+ from tornado.websocket import WebSocketClosedError
+-from traitlets import Bool, Unicode
++from traitlets import Bool
+ 
+ from .labapp import LabApp, get_app_dir
+ from .tests.test_app import TestEnv
+@@ -51,7 +48,7 @@
+         # https://github.com/tornadoweb/tornado/issues/2834
+         if (
+             hasattr(record, "exc_info")
+-            and record.exc_info is not None
++            and not record.exc_info is None
+             and isinstance(record.exc_info[1], (StreamClosedError, WebSocketClosedError))
+         ):
+             return
+@@ -145,8 +142,8 @@
+     if not osp.exists(osp.join(target, "node_modules")):
+         if not osp.exists(target):
+             os.makedirs(osp.join(target))
+-        await run_async_process(["npm", "init", "-y"], cwd=target)
+-        await run_async_process(["npm", "install", "playwright@^1.9.2"], cwd=target)
++        await run_async_process(["jlpm", "init", "-y"], cwd=target)
++        await run_async_process(["jlpm", "add", "playwright@^1.9.2"], cwd=target)
+     await run_async_process(["npx", "playwright", "install"], cwd=target)
+     shutil.copy(osp.join(here, "browser-test.js"), osp.join(target, "browser-test.js"))
+     await run_async_process(["node", "browser-test.js", url], cwd=target)
+@@ -157,11 +154,11 @@
+     target = osp.join(get_app_dir(), "browser_test")
+     if not osp.exists(osp.join(target, "node_modules")):
+         os.makedirs(target)
+-        subprocess.call(["npm", "init", "-y"], cwd=target)  # noqa S603 S607
+-        subprocess.call(["npm", "install", "playwright@^1.9.2"], cwd=target)  # noqa S603 S607
+-    subprocess.call(["npx", "playwright", "install"], cwd=target)  # noqa S603 S607
++        subprocess.call(["jlpm", "init", "-y"], cwd=target)
++        subprocess.call(["jlpm", "add", "playwright@^1.9.2"], cwd=target)
++    subprocess.call(["npx", "playwright", "install"], cwd=target)
+     shutil.copy(osp.join(here, "browser-test.js"), osp.join(target, "browser-test.js"))
+-    return subprocess.check_call(["node", "browser-test.js", url], cwd=target)  # noqa S603 S607
++    return subprocess.check_call(["node", "browser-test.js", url], cwd=target)
+ 
+ 
+ class BrowserApp(LabApp):
+@@ -173,14 +170,14 @@
+     open_browser = False
+ 
+     serverapp_config = {"base_url": "/foo/"}
+-    default_url = Unicode("/lab?reset", config=True, help="The default URL to redirect to from `/`")
++    default_url = "/lab?reset"
+     ip = "127.0.0.1"
+     flags = test_flags
+     aliases = test_aliases
+     test_browser = Bool(True)
+ 
+     def initialize_settings(self):
+-        self.settings.setdefault("page_config_data", {})
++        self.settings.setdefault("page_config_data", dict())
+         self.settings["page_config_data"]["browserTest"] = True
+         self.settings["page_config_data"]["buildAvailable"] = False
+         self.settings["page_config_data"]["exposeAppInBrowser"] = True
+@@ -198,6 +195,18 @@
+     return [{"module": __name__, "app": BrowserApp}]
+ 
+ 
++# TODO: remove handling of --notebook arg and the following two
++# functions in JupyterLab 4.0
++def load_jupyter_server_extension(serverapp):
++    serverapp.log.info("Loading BrowserApp as a classic notebook (v6) extension.")
++    extension = BrowserApp()
++    extension.serverapp = serverapp
++    extension.load_config_file()
++    extension.update_config(serverapp.config)
++    extension.parse_command_line(serverapp.extra_args)
++    extension.initialize()
++
++
+ def _jupyter_server_extension_paths():
+     return [{"module": "jupyterlab.browser_check"}]
+ 
+@@ -209,4 +218,13 @@
+             BrowserApp.test_browser = False
+             sys.argv.remove(option)
+ 
+-    BrowserApp.launch_instance()
++    if "--notebook" in sys.argv:
++        from notebook.notebookapp import NotebookApp
++
++        NotebookApp.default_url = "/lab"
++        sys.argv.remove("--notebook")
++        NotebookApp.nbserver_extensions = {"jupyterlab.browser_check": True}
++        NotebookApp.open_browser = False
++        NotebookApp.launch_instance()
++    else:
++        BrowserApp.launch_instance()

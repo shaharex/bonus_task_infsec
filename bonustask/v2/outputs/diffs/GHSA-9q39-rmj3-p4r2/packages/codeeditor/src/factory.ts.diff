@@ -1,0 +1,15 @@
+--- packages\codeeditor\src\factory.ts (old)
++++ packages\codeeditor\src\factory.ts (new)
+@@ -10,10 +10,10 @@
+   /**
+    * Create a new editor for inline code.
+    */
+-  newInlineEditor: CodeEditor.Factory;
++  newInlineEditor(options: CodeEditor.IOptions): CodeEditor.IEditor;
+ 
+   /**
+    * Create a new editor for a full document.
+    */
+-  newDocumentEditor: CodeEditor.Factory;
++  newDocumentEditor(options: CodeEditor.IOptions): CodeEditor.IEditor;
+ }

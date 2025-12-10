@@ -1,0 +1,20 @@
+--- packages\codeeditor\src\mimetype.ts (old)
++++ packages\codeeditor\src\mimetype.ts (new)
+@@ -16,8 +16,6 @@
+    *
+    * #### Notes
+    * If a mime type cannot be found returns the default mime type `text/plain`, never `null`.
+-   * There may be more than one mime type, but only the first one will be returned.
+-   * To access all mime types, use `IEditorLanguageRegistry` instead.
+    */
+   getMimeTypeByLanguage(info: nbformat.ILanguageInfoMetadata): string;
+ 
+@@ -30,8 +28,6 @@
+    *
+    * #### Notes
+    * If a mime type cannot be found returns the default mime type `text/plain`, never `null`.
+-   * There may be more than one mime type, but only the first one will be returned.
+-   * To access all mime types, use `IEditorLanguageRegistry` instead.
+    */
+   getMimeTypeByFilePath(filePath: string): string;
+ }

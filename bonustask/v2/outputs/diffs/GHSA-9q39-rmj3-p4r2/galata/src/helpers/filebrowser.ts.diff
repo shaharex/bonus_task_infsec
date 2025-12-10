@@ -1,0 +1,187 @@
+--- galata\src\helpers\filebrowser.ts (old)
++++ galata\src\helpers\filebrowser.ts (new)
+@@ -10,10 +10,7 @@
+  * File Browser Helpers
+  */
+ export class FileBrowserHelper {
+-  constructor(
+-    readonly page: Page,
+-    readonly contents: ContentsHelper
+-  ) {}
++  constructor(readonly page: Page, readonly contents: ContentsHelper) {}
+ 
+   /**
+    * Create the selector for a file in the file browser
+@@ -54,7 +51,9 @@
+       await this.openDirectory(dirPath);
+     }
+ 
+-    await Utils.waitForCondition(() => this.isFileListedInBrowser(fileName));
++    await Utils.waitForCondition(async () => {
++      return await this.isFileListedInBrowser(fileName);
++    });
+   }
+ 
+   /**
+@@ -64,11 +63,10 @@
+    * @returns File status
+    */
+   async isFileListedInBrowser(fileName: string): Promise<boolean> {
+-    const item = this.page
+-      .getByRole('region', { name: 'File Browser Section' })
+-      .getByRole('listitem', { name: new RegExp(`^Name: ${fileName}`) });
+-
+-    return (await item.count()) > 0;
++    const item = await this.page.$(
++      `xpath=${this.xpBuildFileSelector(fileName)}`
++    );
++    return item !== null;
+   }
+ 
+   /**
+@@ -97,40 +95,21 @@
+    * Note: This will double click on the file;
+    * an editor needs to be available for the given file type.
+    *
+-   * @param filePath File path
+-   * @param factory Document factory to use
++   * @param filePath Notebook path
+    * @returns Action success status
+    */
+-  async open(filePath: string, factory?: string): Promise<boolean> {
++  async open(filePath: string): Promise<boolean> {
+     await this.revealFileInBrowser(filePath);
+     const name = path.basename(filePath);
+ 
+-    const fileItem = this.page
+-      .getByRole('region', { name: 'File Browser Section' })
+-      .getByRole('listitem', { name: new RegExp(`^Name: ${name}`) });
+-    if (await fileItem.count()) {
+-      if (factory) {
+-        await fileItem.click({ button: 'right' });
+-        await this.page
+-          .getByRole('listitem')
+-          .filter({ hasText: 'Open With' })
+-          .click();
+-        await this.page
+-          .getByRole('menuitem', { name: factory, exact: true })
+-          .click();
+-      } else {
+-        await fileItem.dblclick();
+-      }
+-      // Use `last` as if a file is already open, it will simply be activated
+-      // if not it will be opened with optionally another factory (but we don't have a way
+-      // to know that from the DOM).
+-      await this.page
+-        .getByRole('main')
+-        .getByRole('tab', { name: new RegExp(`^${name}`) })
+-        .last()
+-        .waitFor({
+-          state: 'visible'
+-        });
++    const fileItem = await this.page.$(
++      `xpath=${this.xpBuildFileSelector(name)}`
++    );
++    if (fileItem) {
++      await fileItem.click({ clickCount: 2 });
++      await this.page.waitForSelector(Utils.xpBuildActivityTabSelector(name), {
++        state: 'visible'
++      });
+     } else {
+       return false;
+     }
+@@ -144,10 +123,10 @@
+    * @returns Action success status
+    */
+   async openHomeDirectory(): Promise<boolean> {
+-    const homeButton = this.page
+-      .locator('.jp-FileBrowser .jp-FileBrowser-crumbs span')
+-      .first();
+-    if (!(await homeButton.count())) {
++    const homeButton = await this.page.$(
++      '.jp-FileBrowser .jp-FileBrowser-crumbs span'
++    );
++    if (!homeButton) {
+       return false;
+     }
+     await homeButton.click();
+@@ -157,7 +136,6 @@
+         '.jp-FileBrowser .jp-FileBrowser-crumbs span'
+       );
+       return (
+-        // The home is the root if no preferred dir is defined.
+         spans.length === 2 && spans[0].classList.contains('jp-BreadCrumbs-home')
+       );
+     });
+@@ -209,38 +187,40 @@
+    */
+   async refresh(): Promise<void> {
+     const page = this.page;
+-    const button = page
+-      .locator('#filebrowser')
+-      .locator(
+-        '.jp-ToolbarButtonComponent[data-command="filebrowser:refresh"]'
+-      );
+-
+-    // Use Promise.race to manage the network response timeout
+-    // This is useful for lab-based applications not using the Jupyter Server Contents API.
+-    // such as JupyterLite, to avoid having the waitForAPIResponse call fail.
+-    await Promise.race([
+-      page.waitForTimeout(2000),
+-      this.contents.waitForAPIResponse(async () => {
+-        await button.click();
+-      })
+-    ]);
++    const item = await page.$(
++      `xpath=//div[@id='filebrowser']//button[${Utils.xpContainsClass(
++        'jp-ToolbarButtonComponent'
++      )} and .//*[@data-icon='ui-components:refresh']]`
++    );
++
++    if (item) {
++      // wait for network response or timeout
++      await Promise.race([
++        page.waitForTimeout(2000),
++        this.contents.waitForAPIResponse(async () => {
++          await item.click();
++        })
++      ]);
++      // wait for DOM rerender
++      await page.waitForTimeout(200);
++    } else {
++      throw new Error('Could not find refresh toolbar item');
++    }
++  }
++
++  protected async _openDirectory(dirName: string): Promise<boolean> {
++    const item = await this.page.$(
++      `xpath=${this.xpBuildDirectorySelector(dirName)}`
++    );
++    if (item === null) {
++      return false;
++    }
++
++    await this.contents.waitForAPIResponse(async () => {
++      await item.click({ clickCount: 2 });
++    });
+     // wait for DOM rerender
+-    await page.waitForTimeout(200);
+-  }
+-
+-  protected async _openDirectory(dirName: string): Promise<boolean> {
+-    const item = this.page
+-      .getByRole('region', { name: 'File Browser Section' })
+-      .getByRole('listitem', { name: new RegExp(`^Name: ${dirName}`) });
+-
+-    await Utils.waitForCondition(async () => (await item.count()) > 0);
+-    await this.contents.waitForAPIResponse(async () => {
+-      await item.dblclick();
+-    });
+-    await this.page
+-      .getByRole('region', { name: 'File Browser Section' })
+-      .getByText(`/${dirName}/`)
+-      .waitFor();
++    await this.page.waitForTimeout(200);
+ 
+     return true;
+   }

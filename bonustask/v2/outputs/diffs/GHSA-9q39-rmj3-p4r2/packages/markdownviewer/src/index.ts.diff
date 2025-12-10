@@ -1,0 +1,9 @@
+--- packages\markdownviewer\src\index.ts (old)
++++ packages\markdownviewer\src\index.ts (new)
+@@ -5,6 +5,5 @@
+  * @module markdownviewer
+  */
+ 
+-export * from './toc';
+ export * from './tokens';
+ export * from './widget';

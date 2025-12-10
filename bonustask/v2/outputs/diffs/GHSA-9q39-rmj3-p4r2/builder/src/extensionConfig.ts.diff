@@ -1,0 +1,43 @@
+--- builder\src\extensionConfig.ts (old)
++++ builder\src\extensionConfig.ts (new)
+@@ -32,7 +32,7 @@
+ }: IOptions = {}): webpack.Configuration[] {
+   const data = require(path.join(packagePath, 'package.json'));
+ 
+-  const ajv = new Ajv({ useDefaults: true, strict: false });
++  const ajv = new Ajv({ useDefaults: true });
+   const validate = ajv.compile(require('../metadata_schema.json'));
+   let valid = validate(data.jupyterlab ?? {});
+   if (!valid) {
+@@ -251,13 +251,13 @@
+     filename += '?v=[contenthash]';
+   }
+ 
+-  const rules: any = [{ test: /\.html$/, type: 'asset/resource' }];
++  const rules: any = [{ test: /\.html$/, type: 'file-loader' }];
+ 
+   if (mode === 'development') {
+     rules.push({
+       test: /\.js$/,
+       enforce: 'pre',
+-      use: [require.resolve('source-map-loader')]
++      use: ['source-map-loader']
+     });
+   }
+ 
+@@ -286,14 +286,7 @@
+ 
+   if (mode === 'development') {
+     const logPath = path.join(outputPath, 'build_log.json');
+-    function regExpReplacer(key: any, value: any) {
+-      if (value instanceof RegExp) {
+-        return value.toString();
+-      } else {
+-        return value;
+-      }
+-    }
+-    fs.writeFileSync(logPath, JSON.stringify(config, regExpReplacer, '  '));
++    fs.writeFileSync(logPath, JSON.stringify(config, null, '  '));
+   }
+   return config;
+ }

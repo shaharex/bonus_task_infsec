@@ -1,0 +1,33 @@
+--- packages\services\test\session\validate.spec.ts (old)
++++ packages\services\test\session\validate.spec.ts (new)
+@@ -17,9 +17,7 @@
+         name: '',
+         type: ''
+       };
+-      expect(() => {
+-        validateModel(model);
+-      }).not.toThrow();
++      validateModel(model);
+     });
+ 
+     it('should fail on missing data', () => {
+@@ -29,7 +27,7 @@
+         path: 'bar',
+         name: ''
+       };
+-      expect(() => validateModel(model)).toThrow();
++      expect(() => validateModel(model)).toThrowError();
+     });
+   });
+ 
+@@ -43,9 +41,7 @@
+         }
+       };
+       updateLegacySessionModel(model);
+-      expect(() => {
+-        validateModel(model);
+-      }).not.toThrow();
++      validateModel(model);
+     });
+   });
+ });

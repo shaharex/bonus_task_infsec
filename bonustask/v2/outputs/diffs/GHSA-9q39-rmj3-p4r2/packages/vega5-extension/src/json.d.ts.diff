@@ -1,0 +1,11 @@
+--- packages\vega5-extension\src\json.d.ts (old)
++++ packages\vega5-extension\src\json.d.ts (new)
+@@ -1,8 +1,3 @@
+-/*
+- * Copyright (c) Jupyter Development Team.
+- * Distributed under the terms of the Modified BSD License.
+- */
+-
+ declare module '*.json' {
+   export const version: string;
+ }

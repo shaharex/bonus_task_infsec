@@ -1,0 +1,28 @@
+--- packages\application\src\mimerenderers.ts (old)
++++ packages\application\src\mimerenderers.ts (new)
+@@ -25,8 +25,7 @@
+  * The mime document tracker token.
+  */
+ export const IMimeDocumentTracker = new Token<IMimeDocumentTracker>(
+-  '@jupyterlab/application:IMimeDocumentTracker',
+-  'A widget tracker for documents rendered using a mime renderer extension. Use this if you want to list and interact with documents rendered by such extensions.'
++  '@jupyterlab/application:IMimeDocumentTracker'
+ );
+ 
+ /**
+@@ -59,7 +58,6 @@
+   // and exposing the mime document widget tracker.
+   plugins.push({
+     id: '@jupyterlab/application:mimedocument',
+-    description: 'Provides a mime document widget tracker.',
+     optional: [ILayoutRestorer],
+     provides: IMimeDocumentTracker,
+     autoStart: true,
+@@ -91,7 +89,6 @@
+ ): JupyterFrontEndPlugin<void> {
+   return {
+     id: item.id,
+-    description: item.description,
+     requires: [IRenderMimeRegistry, ITranslator],
+     autoStart: true,
+     activate: (

@@ -1,0 +1,174 @@
+--- packages\apputils\src\thememanager.ts (old)
++++ packages\apputils\src\thememanager.ts (new)
+@@ -8,11 +8,13 @@
+   nullTranslator,
+   TranslationBundle
+ } from '@jupyterlab/translation';
++import { each } from '@lumino/algorithm';
+ import { DisposableDelegate, IDisposable } from '@lumino/disposable';
+ import { ISignal, Signal } from '@lumino/signaling';
+ import { Widget } from '@lumino/widgets';
+ import { Dialog, showDialog } from './dialog';
+-import { ISplashScreen, IThemeManager } from './tokens';
++import { ISplashScreen } from './splash';
++import { IThemeManager } from './tokens';
+ 
+ /**
+  * The number of milliseconds between theme loading attempts.
+@@ -61,35 +63,6 @@
+   }
+ 
+   /**
+-   * Get the name of the preferred light theme.
+-   */
+-  get preferredLightTheme(): string {
+-    return this._settings.composite['preferred-light-theme'] as string;
+-  }
+-
+-  /**
+-   * Get the name of the preferred dark theme.
+-   */
+-  get preferredDarkTheme(): string {
+-    return this._settings.composite['preferred-dark-theme'] as string;
+-  }
+-
+-  /**
+-   * Get the name of the preferred theme
+-   * When `adaptive-theme` is disabled, get current theme;
+-   * Else, depending on the system settings, get preferred light or dark theme.
+-   */
+-  get preferredTheme(): string | null {
+-    if (!this.isToggledAdaptiveTheme()) {
+-      return this.theme;
+-    }
+-    if (this.isSystemColorSchemeDark()) {
+-      return this.preferredDarkTheme;
+-    }
+-    return this.preferredLightTheme;
+-  }
+-
+-  /**
+    * The names of the registered themes.
+    */
+   get themes(): ReadonlyArray<string> {
+@@ -97,24 +70,6 @@
+   }
+ 
+   /**
+-   * Get the names of the light themes.
+-   */
+-  get lightThemes(): ReadonlyArray<string> {
+-    return Object.entries(this._themes)
+-      .filter(([_, theme]) => theme.isLight)
+-      .map(([name, _]) => name);
+-  }
+-
+-  /**
+-   * Get the names of the dark themes.
+-   */
+-  get darkThemes(): ReadonlyArray<string> {
+-    return Object.entries(this._themes)
+-      .filter(([_, theme]) => !theme.isLight)
+-      .map(([name, _]) => name);
+-  }
+-
+-  /**
+    * A signal fired when the application theme changes.
+    */
+   get themeChanged(): ISignal<this, IChangedArgs<string, string | null>> {
+@@ -122,21 +77,11 @@
+   }
+ 
+   /**
+-   * Test if the system's preferred color scheme is dark
+-   */
+-  isSystemColorSchemeDark(): boolean {
+-    return (
+-      window.matchMedia &&
+-      window.matchMedia('(prefers-color-scheme: dark)').matches
+-    );
+-  }
+-
+-  /**
+    * Get the value of a CSS variable from its key.
+    *
+    * @param key - A Jupyterlab CSS variable, without the leading '--jp-'.
+    *
+-   * @returns value - The current value of the Jupyterlab CSS variable
++   * @return value - The current value of the Jupyterlab CSS variable
+    */
+   getCSS(key: string): string {
+     return (
+@@ -273,20 +218,6 @@
+   }
+ 
+   /**
+-   * Set the preferred light theme.
+-   */
+-  setPreferredLightTheme(name: string): Promise<void> {
+-    return this._settings.set('preferred-light-theme', name);
+-  }
+-
+-  /**
+-   * Set the preferred dark theme.
+-   */
+-  setPreferredDarkTheme(name: string): Promise<void> {
+-    return this._settings.set('preferred-dark-theme', name);
+-  }
+-
+-  /**
+    * Test whether a given theme is light.
+    */
+   isLight(name: string): boolean {
+@@ -338,23 +269,6 @@
+     return this._settings.set(
+       'theme-scrollbars',
+       !this._settings.composite['theme-scrollbars']
+-    );
+-  }
+-
+-  /**
+-   * Test if the user enables adaptive theme.
+-   */
+-  isToggledAdaptiveTheme(): boolean {
+-    return !!this._settings.composite['adaptive-theme'];
+-  }
+-
+-  /**
+-   * Toggle the `adaptive-theme` setting.
+-   */
+-  toggleAdaptiveTheme(): Promise<void> {
+-    return this._settings.set(
+-      'adaptive-theme',
+-      !this._settings.composite['adaptive-theme']
+     );
+   }
+ 
+@@ -420,15 +334,7 @@
+ 
+     const settings = this._settings;
+     const themes = this._themes;
+-
+-    let theme = settings.composite['theme'] as string;
+-    if (this.isToggledAdaptiveTheme()) {
+-      if (this.isSystemColorSchemeDark()) {
+-        theme = this.preferredDarkTheme;
+-      } else {
+-        theme = this.preferredLightTheme;
+-      }
+-    }
++    const theme = settings.composite['theme'] as string;
+ 
+     // If another promise is outstanding, wait until it finishes before
+     // attempting to load the settings. Because outstanding promises cannot
+@@ -618,9 +524,7 @@
+    * Fit a widget and all of its children, recursively.
+    */
+   export function fitAll(widget: Widget): void {
+-    for (const child of widget.children()) {
+-      fitAll(child);
+-    }
++    each(widget.children(), fitAll);
+     widget.fit();
+   }
+ }

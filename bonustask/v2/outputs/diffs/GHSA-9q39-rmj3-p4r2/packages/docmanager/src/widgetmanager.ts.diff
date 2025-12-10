@@ -1,0 +1,277 @@
+--- packages\docmanager\src\widgetmanager.ts (old)
++++ packages\docmanager\src\widgetmanager.ts (new)
+@@ -6,13 +6,12 @@
+ import { DocumentRegistry, IDocumentWidget } from '@jupyterlab/docregistry';
+ import { Contents } from '@jupyterlab/services';
+ import { ITranslator, nullTranslator } from '@jupyterlab/translation';
+-import { ArrayExt, find } from '@lumino/algorithm';
++import { ArrayExt, each, filter, find, map, toArray } from '@lumino/algorithm';
+ import { DisposableSet, IDisposable } from '@lumino/disposable';
+ import { IMessageHandler, Message, MessageLoop } from '@lumino/messaging';
+ import { AttachedProperty } from '@lumino/properties';
+ import { ISignal, Signal } from '@lumino/signaling';
+ import { Widget } from '@lumino/widgets';
+-import { IRecentsManager } from './tokens';
+ 
+ /**
+  * The class name added to document widgets.
+@@ -29,7 +28,6 @@
+   constructor(options: DocumentWidgetManager.IOptions) {
+     this._registry = options.registry;
+     this.translator = options.translator || nullTranslator;
+-    this._recentsManager = options.recentsManager || null;
+   }
+ 
+   /**
+@@ -116,12 +114,12 @@
+     Private.factoryProperty.set(widget, factory);
+     // Handle widget extensions.
+     const disposables = new DisposableSet();
+-    for (const extender of this._registry.widgetExtensions(factory.name)) {
++    each(this._registry.widgetExtensions(factory.name), extender => {
+       const disposable = extender.createNew(widget, context);
+       if (disposable) {
+         disposables.add(disposable);
+       }
+-    }
++    });
+     Private.disposablesProperty.set(widget, disposables);
+     widget.disposed.connect(this._onWidgetDisposed, this);
+ 
+@@ -225,9 +223,9 @@
+    */
+   closeWidgets(context: DocumentRegistry.Context): Promise<void> {
+     const widgets = Private.widgetsProperty.get(context);
+-    return Promise.all(widgets.map(widget => this.onClose(widget))).then(
+-      () => undefined
+-    );
++    return Promise.all(
++      toArray(map(widgets, widget => this.onClose(widget)))
++    ).then(() => undefined);
+   }
+ 
+   /**
+@@ -238,9 +236,9 @@
+    */
+   deleteWidgets(context: DocumentRegistry.Context): Promise<void> {
+     const widgets = Private.widgetsProperty.get(context);
+-    return Promise.all(widgets.map(widget => this.onDelete(widget))).then(
+-      () => undefined
+-    );
++    return Promise.all(
++      toArray(map(widgets, widget => this.onDelete(widget)))
++    ).then(() => undefined);
+   }
+ 
+   /**
+@@ -259,17 +257,8 @@
+         void this.onClose(handler as Widget);
+         return false;
+       case 'activate-request': {
+-        const widget = handler as Widget;
+-        const context = this.contextForWidget(widget);
++        const context = this.contextForWidget(handler as Widget);
+         if (context) {
+-          context.ready
+-            .then(() => {
+-              // contentsModel is null until the context is ready
+-              this._recordAsRecentlyOpened(widget, context.contentsModel!);
+-            })
+-            .catch(() => {
+-              console.warn('Could not record the recents status for', context);
+-            });
+           this._activateRequested.emit(context.path);
+         }
+         break;
+@@ -337,8 +326,8 @@
+       return true;
+     }
+     if (shouldClose) {
+-      const context = Private.contextProperty.get(widget);
+       if (!ignoreSave) {
++        const context = Private.contextProperty.get(widget);
+         if (!context) {
+           return true;
+         }
+@@ -348,22 +337,6 @@
+           await context.saveAs();
+         }
+       }
+-      if (context) {
+-        const result = await Promise.race([
+-          context.ready,
+-          new Promise(resolve => setTimeout(resolve, 3000, 'timeout'))
+-        ]);
+-        if (result === 'timeout') {
+-          console.warn(
+-            'Could not record the widget as recently closed because the context did not become ready in 3 seconds'
+-          );
+-        } else {
+-          // Note: `contentsModel` is null until the the context is ready;
+-          // we have to handle it after `await` rather than in a `then`
+-          // to ensure we record it as recent before the widget gets disposed.
+-          this._recordAsRecentlyClosed(widget, context.contentsModel!);
+-        }
+-      }
+       if (widget.isDisposed) {
+         return true;
+       }
+@@ -380,50 +353,6 @@
+   protected onDelete(widget: Widget): Promise<void> {
+     widget.dispose();
+     return Promise.resolve(void 0);
+-  }
+-
+-  /**
+-   * Record the activated file, and its parent directory, as recently opened.
+-   */
+-  private _recordAsRecentlyOpened(
+-    widget: Widget,
+-    model: Omit<Contents.IModel, 'content'>
+-  ) {
+-    const recents = this._recentsManager;
+-    if (!recents) {
+-      // no-op
+-      return;
+-    }
+-    const path = model.path;
+-    const fileType = this._registry.getFileTypeForModel(model);
+-    const contentType = fileType.contentType;
+-    const factory = Private.factoryProperty.get(widget)?.name;
+-    recents.addRecent({ path, contentType, factory }, 'opened');
+-    // Add the containing directory, too
+-    if (contentType !== 'directory') {
+-      const parent =
+-        path.lastIndexOf('/') > 0 ? path.slice(0, path.lastIndexOf('/')) : '';
+-      recents.addRecent({ path: parent, contentType: 'directory' }, 'opened');
+-    }
+-  }
+-
+-  /**
+-   * Record the activated file, and its parent directory, as recently opened.
+-   */
+-  private _recordAsRecentlyClosed(
+-    widget: Widget,
+-    model: Omit<Contents.IModel, 'content'>
+-  ) {
+-    const recents = this._recentsManager;
+-    if (!recents) {
+-      // no-op
+-      return;
+-    }
+-    const path = model.path;
+-    const fileType = this._registry.getFileTypeForModel(model);
+-    const contentType = fileType.contentType;
+-    const factory = Private.factoryProperty.get(widget)?.name;
+-    recents.addRecent({ path, contentType, factory }, 'closed');
+   }
+ 
+   /**
+@@ -445,13 +374,15 @@
+       return Promise.resolve([true, true]);
+     }
+     // Filter by whether the factories are read only.
+-    widgets = widgets.filter(widget => {
+-      const factory = Private.factoryProperty.get(widget);
+-      if (!factory) {
+-        return false;
+-      }
+-      return factory.readOnly === false;
+-    });
++    widgets = toArray(
++      filter(widgets, widget => {
++        const factory = Private.factoryProperty.get(widget);
++        if (!factory) {
++          return false;
++        }
++        return factory.readOnly === false;
++      })
++    );
+     const fileName = widget.title.label;
+ 
+     const factory = Private.factoryProperty.get(widget);
+@@ -465,20 +396,14 @@
+       const buttons = [
+         Dialog.cancelButton(),
+         Dialog.okButton({
+-          label: isDirty ? trans.__('Close and save') : trans.__('Close'),
+-          ariaLabel: isDirty
+-            ? trans.__('Close and save Document')
+-            : trans.__('Close Document')
++          label: isDirty ? trans.__('Close and save') : trans.__('Close')
+         })
+       ];
+       if (isDirty) {
+         buttons.splice(
+           1,
+           0,
+-          Dialog.warnButton({
+-            label: trans.__('Close without saving'),
+-            ariaLabel: trans.__('Close Document without saving')
+-          })
++          Dialog.warnButton({ label: trans.__('Close without saving') })
+         );
+       }
+ 
+@@ -516,14 +441,12 @@
+         title: trans.__('Save your work'),
+         body: trans.__('Save changes in "%1" before closing?', fileName),
+         buttons: [
+-          Dialog.cancelButton(),
+-          Dialog.warnButton({
+-            label: trans.__('Discard'),
+-            ariaLabel: trans.__('Discard changes to file')
+-          }),
++          Dialog.cancelButton({ label: trans.__('Cancel') }),
++          Dialog.warnButton({ label: trans.__('Discard') }),
+           Dialog.okButton({ label: saveLabel })
+         ]
+       });
++
+       return [result.button.accept, result.button.displayType === 'warn'];
+     }
+   }
+@@ -561,9 +484,9 @@
+    */
+   private _onFileChanged(context: DocumentRegistry.Context): void {
+     const widgets = Private.widgetsProperty.get(context);
+-    for (const widget of widgets) {
++    each(widgets, widget => {
+       void this.setCaption(widget);
+-    }
++    });
+   }
+ 
+   /**
+@@ -571,9 +494,9 @@
+    */
+   private _onPathChanged(context: DocumentRegistry.Context): void {
+     const widgets = Private.widgetsProperty.get(context);
+-    for (const widget of widgets) {
++    each(widgets, widget => {
+       void this.setCaption(widget);
+-    }
++    });
+   }
+ 
+   protected translator: ITranslator;
+@@ -584,7 +507,6 @@
+   private _stateChanged = new Signal<DocumentWidgetManager, IChangedArgs<any>>(
+     this
+   );
+-  private _recentsManager: IRecentsManager | null;
+ }
+ 
+ /**
+@@ -599,11 +521,6 @@
+      * A document registry instance.
+      */
+     registry: DocumentRegistry;
+-
+-    /**
+-     * The manager for recent documents.
+-     */
+-    recentsManager?: IRecentsManager;
+ 
+     /**
+      * The application language translator.

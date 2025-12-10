@@ -1,0 +1,119 @@
+--- packages\services\test\kernel\validate.spec.ts (old)
++++ packages\services\test\kernel\validate.spec.ts (new)
+@@ -13,9 +13,7 @@
+         session: 'foo',
+         content: { comm_id: 'foo', data: {} }
+       });
+-      expect(() => {
+-        validateMessage(msg);
+-      }).not.toThrow();
++      validateMessage(msg);
+     });
+ 
+     it('should throw if missing a field', () => {
+@@ -26,7 +24,7 @@
+         content: { comm_id: 'foo', data: {} }
+       });
+       delete (msg as any).channel;
+-      expect(() => validateMessage(msg)).toThrow();
++      expect(() => validateMessage(msg)).toThrowError();
+     });
+ 
+     it('should throw if a field is invalid', () => {
+@@ -37,7 +35,7 @@
+         content: { comm_id: 'foo', data: {} }
+       });
+       (msg as any).header.username = 1;
+-      expect(() => validateMessage(msg)).toThrow();
++      expect(() => validateMessage(msg)).toThrowError();
+     });
+ 
+     it('should throw if the parent header is given an invalid', () => {
+@@ -49,7 +47,7 @@
+       });
+       msg.parent_header = msg.header;
+       (msg as any).parent_header.username = 1;
+-      expect(() => validateMessage(msg)).toThrow();
++      expect(() => validateMessage(msg)).toThrowError();
+     });
+ 
+     it('should throw if the channel is not a string', () => {
+@@ -60,7 +58,7 @@
+         content: { comm_id: 'foo', data: {} }
+       });
+       (msg as any).channel = 1;
+-      expect(() => validateMessage(msg)).toThrow();
++      expect(() => validateMessage(msg)).toThrowError();
+     });
+ 
+     it('should validate an iopub message', () => {
+@@ -70,9 +68,7 @@
+         session: 'baz',
+         content: { comm_id: 'foo', data: {} }
+       });
+-      expect(() => {
+-        validateMessage(msg);
+-      }).not.toThrow();
++      validateMessage(msg);
+     });
+ 
+     it('should ignore on an unknown iopub message type', () => {
+@@ -82,9 +78,7 @@
+         session: 'baz',
+         content: {}
+       } as any);
+-      expect(() => {
+-        validateMessage(msg);
+-      }).not.toThrow();
++      validateMessage(msg);
+     });
+ 
+     it('should throw on missing iopub message content', () => {
+@@ -94,7 +88,7 @@
+         session: 'baz',
+         content: {} as any
+       } as any);
+-      expect(() => validateMessage(msg)).toThrow();
++      expect(() => validateMessage(msg)).toThrowError();
+     });
+ 
+     it('should throw on invalid iopub message content', () => {
+@@ -104,7 +98,7 @@
+         session: 'baz',
+         content: { wait: 1 as any }
+       });
+-      expect(() => validateMessage(msg)).toThrow();
++      expect(() => validateMessage(msg)).toThrowError();
+     });
+ 
+     it('should throw on invalid iopub status message content', () => {
+@@ -114,7 +108,7 @@
+         session: 'baz',
+         content: { execution_state: 'invalid-status' as Kernel.Status }
+       });
+-      expect(() => validateMessage(msg)).toThrow();
++      expect(() => validateMessage(msg)).toThrowError();
+     });
+ 
+     it('should handle no buffers field', () => {
+@@ -125,18 +119,14 @@
+         content: { comm_id: 'foo', data: {} }
+       });
+       delete msg['buffers'];
+-      expect(() => {
+-        validateMessage(msg);
+-      }).not.toThrow();
++      validateMessage(msg);
+     });
+   });
+ 
+   describe('#validateModel()', () => {
+     it('should pass a valid id', () => {
+       const id: Kernel.IModel = { name: 'foo', id: 'baz' };
+-      expect(() => {
+-        validateModel(id);
+-      }).not.toThrow();
++      validateModel(id);
+     });
+   });
+ });

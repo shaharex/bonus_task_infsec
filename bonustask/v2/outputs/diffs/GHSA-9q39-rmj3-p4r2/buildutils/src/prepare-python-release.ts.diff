@@ -1,0 +1,20 @@
+--- buildutils\src\prepare-python-release.ts (old)
++++ buildutils\src\prepare-python-release.ts (new)
+@@ -3,7 +3,7 @@
+ | Distributed under the terms of the Modified BSD License.
+ |----------------------------------------------------------------------------*/
+ 
+-import { program as commander } from 'commander';
++import commander from 'commander';
+ import * as crypto from 'crypto';
+ import * as fs from 'fs-extra';
+ import * as path from 'path';
+@@ -13,7 +13,7 @@
+ commander
+   .description('Prepare the Python package for release')
+   .action(async (options: any) => {
+-    utils.exitOnUncaughtException();
++    utils.exitOnUuncaughtException();
+ 
+     const distDir = './dist';
+ 

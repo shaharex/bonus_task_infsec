@@ -1,0 +1,146 @@
+--- packages\services\src\serverconnection.ts (old)
++++ packages\services\src\serverconnection.ts (new)
+@@ -2,31 +2,32 @@
+ // Distributed under the terms of the Modified BSD License.
+ 
+ import { PageConfig, URLExt } from '@jupyterlab/coreutils';
+-import { KernelMessage } from './kernel';
+-import { deserialize, serialize } from './kernel/serialize';
+-
++
++/**
++ * Handle the default `fetch` and `WebSocket` providers.
++ */
++declare let global: any;
++
++let FETCH: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
++let HEADERS: typeof Headers;
++let REQUEST: typeof Request;
+ let WEBSOCKET: typeof WebSocket;
+ 
+ if (typeof window === 'undefined') {
+   // Mangle the require statements so it does not get picked up in the
+   // browser assets.
++  /* tslint:disable */
++  const fetchMod = require('node-fetch');
++  FETCH = global.fetch ?? fetchMod;
++  REQUEST = global.Request ?? fetchMod.Request;
++  HEADERS = global.Headers ?? fetchMod.Headers;
+   WEBSOCKET = require('ws');
++  /* tslint:enable */
+ } else {
++  FETCH = fetch;
++  REQUEST = Request;
++  HEADERS = Headers;
+   WEBSOCKET = WebSocket;
+-}
+-
+-interface ISerializer {
+-  /**
+-   * Serialize a kernel message for transport.
+-   */
+-  serialize(
+-    msg: KernelMessage.IMessage,
+-    protocol?: string
+-  ): string | ArrayBuffer;
+-  /**
+-   * Deserialize and return the unpacked message.
+-   */
+-  deserialize(data: ArrayBuffer, protocol?: string): KernelMessage.IMessage;
+ }
+ 
+ /**
+@@ -47,7 +48,7 @@
+   /**
+    * A Jupyter server settings object.
+    * Note that all of the settings are optional when passed to
+-   * [[makeSettings]]. The default settings are given in [[defaultSettings]].
++   * [[makeSettings]].  The default settings are given in [[defaultSettings]].
+    */
+   export interface ISettings {
+     /**
+@@ -103,11 +104,6 @@
+      * The `WebSocket` object constructor.
+      */
+     readonly WebSocket: typeof WebSocket;
+-
+-    /**
+-     * Serializer used to serialize/deserialize kernel messages.
+-     */
+-    readonly serializer: ISerializer;
+   }
+ 
+   /**
+@@ -117,7 +113,7 @@
+    *
+    * @returns The full settings object.
+    */
+-  export function makeSettings(options?: Partial<ISettings>): ISettings {
++  export function makeSettings(options?: Partial<ISettings>) {
+     return Private.makeSettings(options);
+   }
+ 
+@@ -246,28 +242,19 @@
+     // Otherwise fall back on the default wsUrl.
+     wsUrl = wsUrl ?? pageWsUrl;
+ 
+-    const appendTokenConfig = PageConfig.getOption('appendToken').toLowerCase();
+-    let appendToken;
+-    if (appendTokenConfig === '') {
+-      appendToken =
++    return {
++      init: { cache: 'no-store', credentials: 'same-origin' },
++      fetch: FETCH,
++      Headers: HEADERS,
++      Request: REQUEST,
++      WebSocket: WEBSOCKET,
++      token: PageConfig.getToken(),
++      appUrl: PageConfig.getOption('appUrl'),
++      appendToken:
+         typeof window === 'undefined' ||
+         (typeof process !== 'undefined' &&
+           process?.env?.JEST_WORKER_ID !== undefined) ||
+-        URLExt.getHostName(pageBaseUrl) !== URLExt.getHostName(wsUrl);
+-    } else {
+-      appendToken = appendTokenConfig === 'true';
+-    }
+-
+-    return {
+-      init: { cache: 'no-store', credentials: 'same-origin' },
+-      fetch,
+-      Headers,
+-      Request,
+-      WebSocket: WEBSOCKET,
+-      token: PageConfig.getToken(),
+-      appUrl: PageConfig.getOption('appUrl'),
+-      appendToken,
+-      serializer: { serialize, deserialize },
++        URLExt.getHostName(pageBaseUrl) !== URLExt.getHostName(wsUrl),
+       ...options,
+       baseUrl,
+       wsUrl
+@@ -314,7 +301,7 @@
+       authenticated = true;
+       request.headers.append('Authorization', `token ${settings.token}`);
+     }
+-    if (typeof document !== 'undefined') {
++    if (typeof document !== 'undefined' && document?.cookie) {
+       const xsrfToken = getCookie('_xsrf');
+       if (xsrfToken !== undefined) {
+         authenticated = true;
+@@ -342,14 +329,7 @@
+    */
+   function getCookie(name: string): string | undefined {
+     // From http://www.tornadoweb.org/en/stable/guide/security.html
+-    let cookie = '';
+-    try {
+-      cookie = document.cookie;
+-    } catch (e) {
+-      // e.g. SecurityError in case of CSP Sandbox
+-      return;
+-    }
+-    const matches = cookie.match('\\b' + name + '=([^;]*)\\b');
++    const matches = document.cookie.match('\\b' + name + '=([^;]*)\\b');
+     return matches?.[1];
+   }
+ }

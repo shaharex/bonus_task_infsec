@@ -1,0 +1,316 @@
+--- packages\services\src\manager.ts (old)
++++ packages\services\src\manager.ts (new)
+@@ -9,23 +9,23 @@
+ 
+ import { Builder, BuildManager } from './builder';
+ 
++import { NbConvert, NbConvertManager } from './nbconvert';
++
+ import { Contents, ContentsManager } from './contents';
+ 
+ import { Event, EventManager } from './event';
+ 
+-import { Kernel, KernelManager } from './kernel';
++import { KernelManager } from './kernel';
+ 
+ import { KernelSpec, KernelSpecManager } from './kernelspec';
+ 
+-import { NbConvert, NbConvertManager } from './nbconvert';
++import { Session, SessionManager } from './session';
++
++import { Setting, SettingManager } from './setting';
++
++import { Terminal, TerminalManager } from './terminal';
+ 
+ import { ServerConnection } from './serverconnection';
+-
+-import { Session, SessionManager } from './session';
+-
+-import { Setting, SettingManager } from './setting';
+-
+-import { Terminal, TerminalManager } from './terminal';
+ 
+ import { User, UserManager } from './user';
+ 
+@@ -38,30 +38,28 @@
+   /**
+    * Construct a new services provider.
+    */
+-  constructor(options: Partial<ServiceManager.IOptions> = {}) {
++  constructor(options: ServiceManager.IOptions = {}) {
+     const defaultDrive = options.defaultDrive;
+     const serverSettings =
+       options.serverSettings ?? ServerConnection.makeSettings();
+     const standby = options.standby ?? 'when-hidden';
+     const normalized = { defaultDrive, serverSettings, standby };
+ 
++    const kernelManager = new KernelManager(normalized);
+     this.serverSettings = serverSettings;
+-    this.contents = options.contents || new ContentsManager(normalized);
+-    this.events = options.events || new EventManager(normalized);
+-    this.kernels = options.kernels || new KernelManager(normalized);
+-    this.sessions =
+-      options.sessions ||
+-      new SessionManager({
+-        ...normalized,
+-        kernelManager: this.kernels
+-      });
+-    this.settings = options.settings || new SettingManager(normalized);
+-    this.terminals = options.terminals || new TerminalManager(normalized);
+-    this.builder = options.builder || new BuildManager(normalized);
+-    this.workspaces = options.workspaces || new WorkspaceManager(normalized);
+-    this.nbconvert = options.nbconvert || new NbConvertManager(normalized);
+-    this.kernelspecs = options.kernelspecs || new KernelSpecManager(normalized);
+-    this.user = options.user || new UserManager(normalized);
++    this.contents = new ContentsManager(normalized);
++    this.events = new EventManager(normalized);
++    this.sessions = new SessionManager({
++      ...normalized,
++      kernelManager: kernelManager
++    });
++    this.settings = new SettingManager(normalized);
++    this.terminals = new TerminalManager(normalized);
++    this.builder = new BuildManager(normalized);
++    this.workspaces = new WorkspaceManager(normalized);
++    this.nbconvert = new NbConvertManager(normalized);
++    this.kernelspecs = new KernelSpecManager(normalized);
++    this.user = new UserManager(normalized);
+ 
+     // Proxy all connection failures from the individual service managers.
+     this.kernelspecs.connectionFailure.connect(this._onConnectionFailure, this);
+@@ -117,32 +115,27 @@
+   /**
+    * Get the session manager instance.
+    */
+-  readonly sessions: Session.IManager;
+-
+-  /**
+-   * Get the kernel manager instance.
+-   */
+-  readonly kernels: Kernel.IManager;
+-
+-  /**
+-   * Get the kernelspec manager instance.
+-   */
+-  readonly kernelspecs: KernelSpec.IManager;
++  readonly sessions: SessionManager;
++
++  /**
++   * Get the session manager instance.
++   */
++  readonly kernelspecs: KernelSpecManager;
+ 
+   /**
+    * Get the setting manager instance.
+    */
+-  readonly settings: Setting.IManager;
++  readonly settings: SettingManager;
+ 
+   /**
+    * The builder for the manager.
+    */
+-  readonly builder: Builder.IManager;
++  readonly builder: BuildManager;
+ 
+   /**
+    * Get the contents manager instance.
+    */
+-  readonly contents: Contents.IManager;
++  readonly contents: ContentsManager;
+ 
+   /**
+    * The event manager instance.
+@@ -152,7 +145,7 @@
+   /**
+    * Get the terminal manager instance.
+    */
+-  readonly terminals: Terminal.IManager;
++  readonly terminals: TerminalManager;
+ 
+   /**
+    * Get the user manager instance.
+@@ -162,12 +155,12 @@
+   /**
+    * Get the workspace manager instance.
+    */
+-  readonly workspaces: Workspace.IManager;
++  readonly workspaces: WorkspaceManager;
+ 
+   /**
+    * Get the nbconvert manager instance.
+    */
+-  readonly nbconvert: NbConvert.IManager;
++  readonly nbconvert: NbConvertManager;
+ 
+   /**
+    * Test whether the manager is ready.
+@@ -200,7 +193,25 @@
+   /**
+    * A service manager interface.
+    */
+-  export interface IManager extends IDisposable, IManagers {
++  export interface IManager extends IDisposable {
++    /**
++     * The builder for the manager.
++     */
++    readonly builder: Builder.IManager;
++
++    /**
++     * The contents manager for the manager.
++     */
++    readonly contents: Contents.IManager;
++
++    /**
++     * The events service manager.
++     *
++     * #### Notes
++     * The events manager is optional until JupyterLab 4.
++     */
++    readonly events?: Event.IManager;
++
+     /**
+      * Test whether the manager is ready.
+      */
+@@ -212,6 +223,46 @@
+     readonly ready: Promise<void>;
+ 
+     /**
++     * The server settings of the manager.
++     */
++    readonly serverSettings: ServerConnection.ISettings;
++
++    /**
++     * The session manager for the manager.
++     */
++    readonly sessions: Session.IManager;
++
++    /**
++     * The session manager for the manager.
++     */
++    readonly kernelspecs: KernelSpec.IManager;
++
++    /**
++     * The setting manager for the manager.
++     */
++    readonly settings: Setting.IManager;
++
++    /**
++     * The terminals manager for the manager.
++     */
++    readonly terminals: Terminal.IManager;
++
++    /**
++     * The user manager for the manager.
++     */
++    readonly user?: User.IManager;
++
++    /**
++     * The workspace manager for the manager.
++     */
++    readonly workspaces: Workspace.IManager;
++
++    /**
++     * The nbconvert manager for the manager.
++     */
++    readonly nbconvert: NbConvert.IManager;
++
++    /**
+      * A signal emitted when there is a connection failure with the server.
+      */
+     readonly connectionFailure: ISignal<IManager, Error>;
+@@ -220,87 +271,20 @@
+   /**
+    * The options used to create a service manager.
+    */
+-  export interface IOptions extends IManagers {
++  export interface IOptions {
++    /**
++     * The server settings of the manager.
++     */
++    readonly serverSettings?: ServerConnection.ISettings;
++
+     /**
+      * The default drive for the contents manager.
+      */
+-    readonly defaultDrive: Contents.IDrive;
++    readonly defaultDrive?: Contents.IDrive;
+ 
+     /**
+      * When the manager stops polling the API. Defaults to `when-hidden`.
+      */
+-    standby: Poll.Standby | (() => boolean | Poll.Standby);
+-  }
+-
+-  /**
+-   * The managers provided by the service manager.
+-   */
+-  interface IManagers {
+-    /**
+-     * The builder for the manager.
+-     *
+-     * @deprecated will be removed in JupyterLab v5
+-     */
+-    readonly builder: Builder.IManager;
+-
+-    /**
+-     * The contents manager for the manager.
+-     */
+-    readonly contents: Contents.IManager;
+-
+-    /**
+-     * The events service manager.
+-     */
+-    readonly events: Event.IManager;
+-
+-    /**
+-     * A promise that fulfills when the manager is initially ready.
+-     */
+-    readonly ready: Promise<void>;
+-
+-    /**
+-     * The server settings of the manager.
+-     */
+-    readonly serverSettings: ServerConnection.ISettings;
+-
+-    /**
+-     * The session manager for the manager.
+-     */
+-    readonly sessions: Session.IManager;
+-
+-    /**
+-     * The kernel manager of the manager.
+-     */
+-    readonly kernels: Kernel.IManager;
+-
+-    /**
+-     * The kernelspec manager for the manager.
+-     */
+-    readonly kernelspecs: KernelSpec.IManager;
+-
+-    /**
+-     * The setting manager for the manager.
+-     */
+-    readonly settings: Setting.IManager;
+-
+-    /**
+-     * The terminals manager for the manager.
+-     */
+-    readonly terminals: Terminal.IManager;
+-
+-    /**
+-     * The user manager for the manager.
+-     */
+-    readonly user: User.IManager;
+-
+-    /**
+-     * The workspace manager for the manager.
+-     */
+-    readonly workspaces: Workspace.IManager;
+-
+-    /**
+-     * The nbconvert manager for the manager.
+-     */
+-    readonly nbconvert: NbConvert.IManager;
++    standby?: Poll.Standby;
+   }
+ }

@@ -1,0 +1,32 @@
+--- builder\src\build.ts (old)
++++ builder\src\build.ts (new)
+@@ -4,7 +4,6 @@
+ |----------------------------------------------------------------------------*/
+ 
+ import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+-import miniSVGDataURI from 'mini-svg-data-uri';
+ 
+ import * as webpack from 'webpack';
+ import * as fs from 'fs-extra';
+@@ -205,18 +204,15 @@
+           rules: [
+             {
+               test: /\.css$/,
+-              use: [MiniCssExtractPlugin.loader, require.resolve('css-loader')]
++              use: [MiniCssExtractPlugin.loader, 'css-loader']
+             },
+             {
+               test: /\.svg/,
+-              type: 'asset/inline',
+-              generator: {
+-                dataUrl: (content: any) => miniSVGDataURI(content.toString())
+-              }
++              use: [{ loader: 'svg-url-loader', options: { encoding: 'none' } }]
+             },
+             {
+               test: /\.(cur|png|jpg|gif|ttf|woff|woff2|eot)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+-              type: 'asset'
++              use: [{ loader: 'url-loader', options: { limit: 10000 } }]
+             }
+           ]
+         },

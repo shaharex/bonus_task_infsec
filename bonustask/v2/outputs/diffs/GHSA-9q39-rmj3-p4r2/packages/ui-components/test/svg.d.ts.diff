@@ -1,0 +1,9 @@
+--- packages\ui-components\test\svg.d.ts (old)
++++ packages\ui-components\test\svg.d.ts (new)
+@@ -1,4 +1,6 @@
+ // Copyright (c) Jupyter Development Team.
++// Distributed under the terms of the Modified BSD License.
++
+ // Distributed under the terms of the Modified BSD License.
+ 
+ // including this file in a package allows for the use of import statements

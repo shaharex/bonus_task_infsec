@@ -1,0 +1,25 @@
+--- packages\tooltip\src\widget.ts (old)
++++ packages\tooltip\src\widget.ts (new)
+@@ -1,7 +1,7 @@
+ // Copyright (c) Jupyter Development Team.
+ // Distributed under the terms of the Modified BSD License.
+ 
+-import { HoverBox } from '@jupyterlab/ui-components';
++import { HoverBox } from '@jupyterlab/apputils';
+ import { CodeEditor } from '@jupyterlab/codeeditor';
+ import {
+   IRenderMime,
+@@ -219,12 +219,7 @@
+ 
+     const editor = this._editor;
+ 
+-    const anchor = editor.getCoordinateForPosition(position);
+-
+-    if (!anchor) {
+-      return;
+-    }
+-
++    const anchor = editor.getCoordinateForPosition(position) as ClientRect;
+     const style = window.getComputedStyle(this.node);
+     const paddingLeft = parseInt(style.paddingLeft!, 10) || 0;
+ 

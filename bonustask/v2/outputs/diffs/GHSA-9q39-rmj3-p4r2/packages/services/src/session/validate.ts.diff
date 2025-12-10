@@ -1,0 +1,18 @@
+--- packages\services\src\session\validate.ts (old)
++++ packages\services\src\session\validate.ts (new)
+@@ -10,7 +10,6 @@
+ /**
+  * Validate an `Session.IModel` object.
+  */
+-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+ export function validateModel(data: any): asserts data is Session.IModel {
+   validateProperty(data, 'id', 'string');
+   validateProperty(data, 'type', 'string');
+@@ -23,7 +22,6 @@
+ /**
+  * Update model from legacy session data.
+  */
+-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+ export function updateLegacySessionModel(data: any): void {
+   if (data.path === undefined && data.notebook !== undefined) {
+     data.path = data.notebook.path;

@@ -1,0 +1,11 @@
+--- packages\observables\src\observablemap.ts (old)
++++ packages\observables\src\observablemap.ts (new)
+@@ -348,7 +348,7 @@
+   /**
+    * The default strict equality item comparator.
+    */
+-  export function itemCmp<T>(first: T, second: T): boolean {
++  export function itemCmp(first: any, second: any): boolean {
+     return first === second;
+   }
+ }

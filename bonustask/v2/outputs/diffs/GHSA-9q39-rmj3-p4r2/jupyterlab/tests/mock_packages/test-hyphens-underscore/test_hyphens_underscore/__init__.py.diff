@@ -1,0 +1,9 @@
+--- jupyterlab\tests\mock_packages\test-hyphens-underscore\test_hyphens_underscore\__init__.py (old)
++++ jupyterlab\tests\mock_packages\test-hyphens-underscore\test_hyphens_underscore\__init__.py (new)
+@@ -1,5 +1,4 @@
+-# Copyright (c) Jupyter Development Team.
+-# Distributed under the terms of the Modified BSD License.
++import json
+ 
+ 
+ def _jupyter_labextension_paths():

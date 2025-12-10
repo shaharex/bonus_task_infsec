@@ -1,0 +1,36 @@
+--- packages\debugger\src\model.ts (old)
++++ packages\debugger\src\model.ts (new)
+@@ -53,7 +53,7 @@
+   readonly sources: SourcesModel;
+ 
+   /**
+-   * The sources model.
++   * The kernel sources model.
+    */
+   readonly kernelSources: KernelSourcesModel;
+ 
+@@ -72,16 +72,6 @@
+   }
+   set hasRichVariableRendering(v: boolean) {
+     this._hasRichVariableRendering = v;
+-  }
+-
+-  /**
+-   * Whether the kernel supports the copyToGlobals request.
+-   */
+-  get supportCopyToGlobals(): boolean {
+-    return this._supportCopyToGlobals;
+-  }
+-  set supportCopyToGlobals(v: boolean) {
+-    this._supportCopyToGlobals = v;
+   }
+ 
+   /**
+@@ -159,7 +149,6 @@
+   private _disposed = new Signal<this, void>(this);
+   private _isDisposed = false;
+   private _hasRichVariableRendering = false;
+-  private _supportCopyToGlobals = false;
+   private _stoppedThreads = new Set<number>();
+   private _title = '-';
+   private _titleChanged = new Signal<this, string>(this);

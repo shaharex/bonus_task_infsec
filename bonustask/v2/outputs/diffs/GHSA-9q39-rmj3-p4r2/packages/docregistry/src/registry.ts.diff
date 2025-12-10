@@ -1,0 +1,513 @@
+--- packages\docregistry\src\registry.ts (old)
++++ packages\docregistry\src\registry.ts (new)
+@@ -1,16 +1,20 @@
+ // Copyright (c) Jupyter Development Team.
+ // Distributed under the terms of the Modified BSD License.
+ 
+-import { ISessionContext, ToolbarRegistry } from '@jupyterlab/apputils';
++import {
++  ISessionContext,
++  Toolbar,
++  ToolbarRegistry
++} from '@jupyterlab/apputils';
+ import { CodeEditor } from '@jupyterlab/codeeditor';
+ import {
+   IChangedArgs as IChangedArgsGeneric,
+   PathExt
+ } from '@jupyterlab/coreutils';
+-import { IObservableList } from '@jupyterlab/observables';
++import { IModelDB, IObservableList } from '@jupyterlab/observables';
+ import { IRenderMime } from '@jupyterlab/rendermime-interfaces';
+ import { Contents, Kernel } from '@jupyterlab/services';
+-import { ISharedDocument, ISharedFile } from '@jupyter/ydoc';
++import { ISharedDocument, ISharedFile } from '@jupyterlab/shared-models';
+ import { ITranslator, nullTranslator } from '@jupyterlab/translation';
+ import {
+   fileIcon,
+@@ -25,10 +29,17 @@
+   pythonIcon,
+   rKernelIcon,
+   spreadsheetIcon,
+-  Toolbar,
+   yamlIcon
+ } from '@jupyterlab/ui-components';
+-import { ArrayExt, find } from '@lumino/algorithm';
++import {
++  ArrayExt,
++  ArrayIterator,
++  each,
++  empty,
++  find,
++  IIterator,
++  map
++} from '@lumino/algorithm';
+ import { PartialJSONValue, ReadonlyPartialJSONValue } from '@lumino/coreutils';
+ import { DisposableDelegate, IDisposable } from '@lumino/disposable';
+ import { ISignal, Signal } from '@lumino/signaling';
+@@ -307,8 +318,9 @@
+           }
+         });
+       if (!this._defaultWidgetFactories[fileTypeName]) {
+-        this._defaultWidgetFactories[fileTypeName] =
+-          this._widgetFactoriesForFileType[fileTypeName][0];
++        this._defaultWidgetFactories[
++          fileTypeName
++        ] = this._widgetFactoriesForFileType[fileTypeName][0];
+       }
+     }
+ 
+@@ -393,34 +405,34 @@
+     }
+ 
+     // Add the file type factories in registration order.
+-    for (const ft of fts) {
++    fts.forEach(ft => {
+       if (ft.name in this._widgetFactoriesForFileType) {
+-        for (const n of this._widgetFactoriesForFileType[ft.name]) {
++        each(this._widgetFactoriesForFileType[ft.name], n => {
+           factories.add(n);
+-        }
+-      }
+-    }
++        });
++      }
++    });
+ 
+     // Add the rest of the global factories, in registration order.
+     if ('*' in this._widgetFactoriesForFileType) {
+-      for (const n of this._widgetFactoriesForFileType['*']) {
++      each(this._widgetFactoriesForFileType['*'], n => {
+         factories.add(n);
+-      }
++      });
+     }
+ 
+     // Construct the return list, checking to make sure the corresponding
+     // model factories are registered.
+     const factoryList: DocumentRegistry.WidgetFactory[] = [];
+-    for (const name of factories) {
++    factories.forEach(name => {
+       const factory = this._widgetFactories[name];
+       if (!factory) {
+-        continue;
++        return;
+       }
+       const modelName = factory.modelName || 'text';
+       if (modelName in this._modelFactories) {
+         factoryList.push(factory);
+       }
+-    }
++    });
+ 
+     return factoryList;
+   }
+@@ -491,9 +503,9 @@
+    * IWidgetFactoryOptions. This function can be used to override that after
+    * the fact.
+    *
+-   * @param fileType The name of the file type.
+-   *
+-   * @param factory The name of the factory.
++   * @param fileType: The name of the file type.
++   *
++   * @param factory: The name of the factory.
+    *
+    * #### Notes
+    * If `factory` is undefined, then any override will be unset, and the
+@@ -533,10 +545,10 @@
+    *
+    * @returns A new iterator of widget factories.
+    */
+-  *widgetFactories(): IterableIterator<DocumentRegistry.WidgetFactory> {
+-    for (const name in this._widgetFactories) {
+-      yield this._widgetFactories[name];
+-    }
++  widgetFactories(): IIterator<DocumentRegistry.WidgetFactory> {
++    return map(Object.keys(this._widgetFactories), name => {
++      return this._widgetFactories[name];
++    });
+   }
+ 
+   /**
+@@ -544,10 +556,10 @@
+    *
+    * @returns A new iterator of model factories.
+    */
+-  *modelFactories(): IterableIterator<DocumentRegistry.ModelFactory> {
+-    for (const name in this._modelFactories) {
+-      yield this._modelFactories[name];
+-    }
++  modelFactories(): IIterator<DocumentRegistry.ModelFactory> {
++    return map(Object.keys(this._modelFactories), name => {
++      return this._modelFactories[name];
++    });
+   }
+ 
+   /**
+@@ -557,15 +569,14 @@
+    *
+    * @returns A new iterator over the widget extensions.
+    */
+-  *widgetExtensions(
++  widgetExtensions(
+     widgetName: string
+-  ): IterableIterator<DocumentRegistry.WidgetExtension> {
++  ): IIterator<DocumentRegistry.WidgetExtension> {
+     widgetName = widgetName.toLowerCase();
+-    if (widgetName in this._extenders) {
+-      for (const extension of this._extenders[widgetName]) {
+-        yield extension;
+-      }
+-    }
++    if (!(widgetName in this._extenders)) {
++      return empty<DocumentRegistry.WidgetExtension>();
++    }
++    return new ArrayIterator(this._extenders[widgetName]);
+   }
+ 
+   /**
+@@ -573,10 +584,8 @@
+    *
+    * @returns A new iterator of file types.
+    */
+-  *fileTypes(): IterableIterator<DocumentRegistry.IFileType> {
+-    for (const type of this._fileTypes) {
+-      yield type;
+-    }
++  fileTypes(): IIterator<DocumentRegistry.IFileType> {
++    return new ArrayIterator(this._fileTypes);
+   }
+ 
+   /**
+@@ -649,8 +658,7 @@
+       language,
+       shouldStart: widgetFactory.preferKernel,
+       canStart: widgetFactory.canStartKernel,
+-      shutdownOnDispose: widgetFactory.shutdownOnClose,
+-      autoStartDefault: widgetFactory.autoStartDefault
++      shutdownOnDispose: widgetFactory.shutdownOnClose
+     };
+   }
+ 
+@@ -664,35 +672,25 @@
+   getFileTypeForModel(
+     model: Partial<Contents.IModel>
+   ): DocumentRegistry.IFileType {
+-    let ft: DocumentRegistry.IFileType | null = null;
+-    if (model.name || model.path) {
+-      const name = model.name || PathExt.basename(model.path!);
+-      const fts = this.getFileTypesForPath(name);
+-      if (fts.length > 0) {
+-        ft = fts[0];
+-      }
+-    }
+     switch (model.type) {
+       case 'directory':
+-        if (ft !== null && ft.contentType === 'directory') {
+-          return ft;
+-        }
+         return (
+           find(this._fileTypes, ft => ft.contentType === 'directory') ||
+           DocumentRegistry.getDefaultDirectoryFileType(this.translator)
+         );
+       case 'notebook':
+-        if (ft !== null && ft.contentType === 'notebook') {
+-          return ft;
+-        }
+         return (
+           find(this._fileTypes, ft => ft.contentType === 'notebook') ||
+           DocumentRegistry.getDefaultNotebookFileType(this.translator)
+         );
+       default:
+         // Find the best matching extension.
+-        if (ft !== null) {
+-          return ft;
++        if (model.name || model.path) {
++          const name = model.name || PathExt.basename(model.path!);
++          const fts = this.getFileTypesForPath(name);
++          if (fts.length > 0) {
++            return fts[0];
++          }
+         }
+         return (
+           this.getFileType('text') ||
+@@ -744,8 +742,9 @@
+   private _defaultWidgetFactoryOverrides: {
+     [key: string]: string;
+   } = Object.create(null);
+-  private _defaultWidgetFactories: { [key: string]: string } =
+-    Object.create(null);
++  private _defaultWidgetFactories: { [key: string]: string } = Object.create(
++    null
++  );
+   private _defaultRenderedWidgetFactories: {
+     [key: string]: string;
+   } = Object.create(null);
+@@ -830,6 +829,16 @@
+     readonly defaultKernelLanguage: string;
+ 
+     /**
++     * The underlying `IModelDB` instance in which model
++     * data is stored.
++     *
++     * ### Notes
++     * Making direct edits to the values stored in the`IModelDB`
++     * is not recommended, and may produce unpredictable results.
++     */
++    readonly modelDB: IModelDB;
++
++    /**
+      * The shared notebook model.
+      */
+     readonly sharedModel: ISharedDocument;
+@@ -865,6 +874,15 @@
+      * Should emit a [contentChanged] signal.
+      */
+     fromJSON(value: ReadonlyPartialJSONValue): void;
++
++    /**
++     * Initialize model state after initial data load.
++     *
++     * #### Notes
++     * This function must be called after the initial data is loaded to set up
++     * initial model state, such as an initial undo stack, etc.
++     */
++    initialize(): void;
+   }
+ 
+   /**
+@@ -886,7 +904,7 @@
+     /**
+      * A signal emitted when the contentsModel changes.
+      */
+-    fileChanged: ISignal<this, Omit<Contents.IModel, 'content'>>;
++    fileChanged: ISignal<this, Contents.IModel>;
+ 
+     /**
+      * A signal emitted on the start and end of a saving operation.
+@@ -930,9 +948,9 @@
+      *
+      * #### Notes
+      * This will be null until the context is 'ready'. Since we only store
+-     * metadata here, the `content` attribute is removed.
+-     */
+-    readonly contentsModel: Omit<Contents.IModel, 'content'> | null;
++     * metadata here, the `.contents` attribute will always be empty.
++     */
++    readonly contentsModel: Contents.IModel | null;
+ 
+     /**
+      * The url resolver for the context.
+@@ -1043,15 +1061,28 @@
+   /**
+    * The options used to initialize a widget factory.
+    */
+-  export interface IWidgetFactoryOptions<T extends Widget = Widget>
+-    extends Omit<
+-      IRenderMime.IDocumentWidgetFactoryOptions,
+-      'primaryFileType' | 'toolbarFactory'
+-    > {
+-    /**
+-     * Whether to automatically start the preferred kernel
+-     */
+-    readonly autoStartDefault?: boolean;
++  export interface IWidgetFactoryOptions<T extends Widget = Widget> {
++    /**
++     * The name of the widget to display in dialogs.
++     */
++    readonly name: string;
++
++    /**
++     * The file types the widget can view.
++     */
++    readonly fileTypes: ReadonlyArray<string>;
++
++    /**
++     * The file types for which the factory should be the default.
++     */
++    readonly defaultFor?: ReadonlyArray<string>;
++
++    /**
++     * The file types for which the factory should be the default for rendering,
++     * if that is different than the default factory (which may be for editing).
++     * If undefined, then it will fall back on the default file type.
++     */
++    readonly defaultRendered?: ReadonlyArray<string>;
+ 
+     /**
+      * Whether the widget factory is read only.
+@@ -1059,6 +1090,11 @@
+     readonly readOnly?: boolean;
+ 
+     /**
++     * The registered name of the model type used to create the widgets.
++     */
++    readonly modelName?: string;
++
++    /**
+      * Whether the widgets prefer having a kernel started.
+      */
+     readonly preferKernel?: boolean;
+@@ -1072,6 +1108,11 @@
+      * Whether the kernel should be shutdown when the widget is closed.
+      */
+     readonly shutdownOnClose?: boolean;
++
++    /**
++     * The application language translator.
++     */
++    readonly translator?: ITranslator;
+ 
+     /**
+      * A function producing toolbar widgets, overriding the default toolbar widgets.
+@@ -1114,15 +1155,6 @@
+      * This field may be used or ignored depending on shell implementation.
+      */
+     rank?: number;
+-
+-    /**
+-     * Type of widget to open
+-     *
+-     * #### Notes
+-     * This is the key used to load user customization.
+-     * Its typical value is: a factory name or the widget id (if singleton)
+-     */
+-    type?: string;
+   }
+ 
+   /**
+@@ -1170,10 +1202,7 @@
+   /**
+    * The interface for a model factory.
+    */
+-  export interface IModelFactory<
+-    T extends IModel,
+-    U extends ISharedDocument = ISharedDocument
+-  > extends IDisposable {
++  export interface IModelFactory<T extends IModel> extends IDisposable {
+     /**
+      * The name of the model.
+      */
+@@ -1197,11 +1226,19 @@
+     /**
+      * Create a new model for a given path.
+      *
+-     * @param options - Optional parameters to construct the model.
++     * @param languagePreference - An optional kernel language preference.
++     * @param modelDB - An optional model storage.
++     * @param isInitialized - Whether the model is initialized or not.
++     * @param collaborationEnabled - Whether collaboration is enabled at the application level or not (default `false`).
+      *
+      * @returns A new document model.
+      */
+-    createNew(options?: IModelOptions<U>): T;
++    createNew(
++      languagePreference?: string,
++      modelDB?: IModelDB,
++      isInitialized?: boolean,
++      collaborationEnabled?: boolean
++    ): T;
+ 
+     /**
+      * Get the preferred kernel language given a file path.
+@@ -1210,24 +1247,6 @@
+   }
+ 
+   /**
+-   * The options used to create a document model.
+-   */
+-  export interface IModelOptions<T extends ISharedDocument = ISharedDocument> {
+-    /**
+-     * The preferred language.
+-     */
+-    languagePreference?: string;
+-    /**
+-     * The shared model.
+-     */
+-    sharedModel?: T;
+-    /**
+-     * Whether the model is collaborative or not.
+-     */
+-    collaborationEnabled?: boolean;
+-  }
+-
+-  /**
+    * A type alias for a standard model factory.
+    */
+   export type ModelFactory = IModelFactory<IModel>;
+@@ -1240,11 +1259,47 @@
+   /**
+    * An interface for a file type.
+    */
+-  export interface IFileType extends IRenderMime.IFileType {
++  export interface IFileType {
++    /**
++     * The name of the file type.
++     */
++    readonly name: string;
++
++    /**
++     * The mime types associated the file type.
++     */
++    readonly mimeTypes: ReadonlyArray<string>;
++
++    /**
++     * The extensions of the file type (e.g. `".txt"`).  Can be a compound
++     * extension (e.g. `".table.json`).
++     */
++    readonly extensions: ReadonlyArray<string>;
++
++    /**
++     * An optional display name for the file type.
++     */
++    readonly displayName?: string;
++
++    /**
++     * An optional pattern for a file name (e.g. `^Dockerfile$`).
++     */
++    readonly pattern?: string;
++
+     /**
+      * The icon for the file type.
+      */
+     readonly icon?: LabIcon;
++
++    /**
++     * The icon class name for the file type.
++     */
++    readonly iconClass?: string;
++
++    /**
++     * The icon label for the file type.
++     */
++    readonly iconLabel?: string;
+ 
+     /**
+      * The content type of the new file.
+@@ -1416,17 +1471,6 @@
+         displayName: trans.__('JSON File'),
+         extensions: ['.json'],
+         mimeTypes: ['application/json'],
+-        icon: jsonIcon
+-      },
+-      {
+-        name: 'jsonl',
+-        displayName: trans.__('JSONLines File'),
+-        extensions: ['.jsonl', '.ndjson'],
+-        mimeTypes: [
+-          'text/jsonl',
+-          'application/jsonl',
+-          'application/json-lines'
+-        ],
+         icon: jsonIcon
+       },
+       {
+@@ -1573,7 +1617,7 @@
+   /**
+    * Get the extension name of a path.
+    *
+-   * @param path - string.
++   * @param file - string.
+    *
+    * #### Notes
+    * Dotted filenames (e.g. `".table.json"` are allowed).

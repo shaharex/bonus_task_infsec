@@ -1,0 +1,63 @@
+--- packages\celltags-extension\src\index.ts (old)
++++ packages\celltags-extension\src\index.ts (new)
+@@ -5,47 +5,33 @@
+  * @module celltags-extension
+  */
+ 
+-import type { FieldProps } from '@rjsf/utils';
+ import {
+   JupyterFrontEnd,
+   JupyterFrontEndPlugin
+ } from '@jupyterlab/application';
+ 
+-import { INotebookTracker } from '@jupyterlab/notebook';
++import { INotebookTools, INotebookTracker } from '@jupyterlab/notebook';
+ 
+-import { CellTagField } from './celltag';
+-import {
+-  IFormRenderer,
+-  IFormRendererRegistry
+-} from '@jupyterlab/ui-components';
++import { TagTool } from '@jupyterlab/celltags';
++
++import { ITranslator } from '@jupyterlab/translation';
+ 
+ /**
+- * Registering cell tag field.
++ * Initialization data for the celltags extension.
+  */
+-const customCellTag: JupyterFrontEndPlugin<void> = {
+-  id: '@jupyterlab/celltags-extension:plugin',
+-  description: 'Adds the cell tags editor.',
++const celltags: JupyterFrontEndPlugin<void> = {
++  id: '@jupyterlab/celltags',
+   autoStart: true,
+-  requires: [INotebookTracker],
+-  optional: [IFormRendererRegistry],
++  requires: [INotebookTools, INotebookTracker, ITranslator],
+   activate: (
+     app: JupyterFrontEnd,
++    tools: INotebookTools,
+     tracker: INotebookTracker,
+-    formRegistry?: IFormRendererRegistry
++    translator: ITranslator
+   ) => {
+-    // Register the custom field
+-    if (formRegistry) {
+-      const component: IFormRenderer = {
+-        fieldRenderer: (props: FieldProps) => {
+-          return new CellTagField(tracker).render(props);
+-        }
+-      };
+-      formRegistry.addRenderer(
+-        '@jupyterlab/celltags-extension:plugin.renderer',
+-        component
+-      );
+-    }
++    const tool = new TagTool(tracker, app, translator);
++    tools.addItem({ tool: tool, rank: 1.6 });
+   }
+ };
+ 
+-export default [customCellTag];
++export default celltags;

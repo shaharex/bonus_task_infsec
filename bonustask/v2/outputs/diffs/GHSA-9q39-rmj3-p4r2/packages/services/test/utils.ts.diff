@@ -1,0 +1,305 @@
+--- packages\services\test\utils.ts (old)
++++ packages\services\test\utils.ts (new)
+@@ -7,6 +7,7 @@
+   PromiseDelegate,
+   UUID
+ } from '@lumino/coreutils';
++import { Response } from 'node-fetch';
+ import WebSocket from 'ws';
+ import {
+   Contents,
+@@ -97,10 +98,9 @@
+  */
+ export function getRequestHandler(
+   status: number,
+-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+   body: any
+ ): ServerConnection.ISettings {
+-  const customFetch = (info: RequestInfo, init?: RequestInit) => {
++  const fetch = (info: RequestInfo, init: RequestInit) => {
+     // Normalize the body.
+     body = JSON.stringify(body);
+ 
+@@ -108,7 +108,7 @@
+     const response = new Response(body, { status });
+     return Promise.resolve(response as any);
+   };
+-  return ServerConnection.makeSettings({ fetch: customFetch });
++  return ServerConnection.makeSettings({ fetch });
+ }
+ 
+ /**
+@@ -121,8 +121,7 @@
+ /**
+  * Handle a single request with a mock response.
+  */
+-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+-export function handleRequest(item: IService, status: number, body: any): void {
++export function handleRequest(item: IService, status: number, body: any) {
+   // Store the existing fetch function.
+   const oldFetch = item.serverSettings.fetch;
+ 
+@@ -135,10 +134,6 @@
+     if (typeof body !== 'string') {
+       body = JSON.stringify(body);
+     }
+-    // Body should be null for these status codes
+-    if (status === 204 || status === 205) {
+-      body = null;
+-    }
+ 
+     // Create the response and return it as a promise.
+     const response = new Response(body, { status });
+@@ -174,13 +169,7 @@
+     for (let retry = 0; retry <= 5; retry++) {
+       try {
+         port = getRandomInt(9000, 20000);
+-        this._server = new WebSocket.Server({
+-          port,
+-          handleProtocols: () => {
+-            return KernelMessage.supportedKernelWebSocketProtocols
+-              .v1KernelWebsocketJupyterOrg;
+-          }
+-        });
++        this._server = new WebSocket.Server({ port });
+       } catch (err) {
+         if (retry === 5) {
+           throw err;
+@@ -302,7 +291,7 @@
+   /**
+    * Send the status from the server to the client.
+    */
+-  sendStatus(msgId: string, status: Kernel.Status): string {
++  sendStatus(msgId: string, status: Kernel.Status) {
+     return this.sendMessage({
+       msgId,
+       msgType: 'status',
+@@ -314,10 +303,7 @@
+   /**
+    * Send an iopub stream message.
+    */
+-  sendStream(
+-    msgId: string,
+-    content: KernelMessage.IStreamMsg['content']
+-  ): string {
++  sendStream(msgId: string, content: KernelMessage.IStreamMsg['content']) {
+     return this.sendMessage({
+       msgId,
+       msgType: 'stream',
+@@ -332,7 +318,7 @@
+   sendDisplayData(
+     msgId: string,
+     content: KernelMessage.IDisplayDataMsg['content']
+-  ): string {
++  ) {
+     return this.sendMessage({
+       msgId,
+       msgType: 'display_data',
+@@ -347,7 +333,7 @@
+   sendUpdateDisplayData(
+     msgId: string,
+     content: KernelMessage.IUpdateDisplayDataMsg['content']
+-  ): string {
++  ) {
+     return this.sendMessage({
+       msgId,
+       msgType: 'update_display_data',
+@@ -358,10 +344,7 @@
+   /**
+    * Send an iopub comm open message.
+    */
+-  sendCommOpen(
+-    msgId: string,
+-    content: KernelMessage.ICommOpenMsg['content']
+-  ): string {
++  sendCommOpen(msgId: string, content: KernelMessage.ICommOpenMsg['content']) {
+     return this.sendMessage({
+       msgId,
+       msgType: 'comm_open',
+@@ -376,7 +359,7 @@
+   sendCommClose(
+     msgId: string,
+     content: KernelMessage.ICommCloseMsg['content']
+-  ): string {
++  ) {
+     return this.sendMessage({
+       msgId,
+       msgType: 'comm_close',
+@@ -388,10 +371,7 @@
+   /**
+    * Send an iopub comm message.
+    */
+-  sendCommMsg(
+-    msgId: string,
+-    content: KernelMessage.ICommMsgMsg['content']
+-  ): string {
++  sendCommMsg(msgId: string, content: KernelMessage.ICommMsgMsg['content']) {
+     return this.sendMessage({
+       msgId,
+       msgType: 'comm_msg',
+@@ -403,7 +383,7 @@
+   sendExecuteResult(
+     msgId: string,
+     content: KernelMessage.IExecuteResultMsg['content']
+-  ): string {
++  ) {
+     return this.sendMessage({
+       msgId,
+       msgType: 'execute_result',
+@@ -415,7 +395,7 @@
+   sendExecuteReply(
+     msgId: string,
+     content: KernelMessage.IExecuteReplyMsg['content']
+-  ): string {
++  ) {
+     return this.sendMessage({
+       msgId,
+       msgType: 'execute_reply',
+@@ -427,7 +407,7 @@
+   sendKernelInfoReply(
+     msgId: string,
+     content: KernelMessage.IInfoReplyMsg['content']
+-  ): string {
++  ) {
+     return this.sendMessage({
+       msgId,
+       msgType: 'kernel_info_reply',
+@@ -439,7 +419,7 @@
+   sendInputRequest(
+     msgId: string,
+     content: KernelMessage.IInputRequestMsg['content']
+-  ): string {
++  ) {
+     return this.sendMessage({
+       msgId,
+       msgType: 'input_request',
+@@ -453,7 +433,7 @@
+    */
+   sendMessage<T extends KernelMessage.Message>(
+     options: MakeOptional<KernelMessage.IOptions<T>, 'session'>
+-  ): string {
++  ) {
+     const msg = KernelMessage.createMessage<any>({
+       session: this.serverSessionId,
+       ...options
+@@ -464,16 +444,10 @@
+   }
+ 
+   /**
+-   * Send a kernel message from the server to the client with newest protocol.
++   * Send a kernel message from the server to the client.
+    */
+   send(msg: KernelMessage.Message): void {
+-    this.sendRaw(
+-      serialize(
+-        msg,
+-        KernelMessage.supportedKernelWebSocketProtocols
+-          .v1KernelWebsocketJupyterOrg
+-      )
+-    );
++    this.sendRaw(serialize(msg));
+   }
+ 
+   /**
+@@ -518,7 +492,7 @@
+   /**
+    * Dispose the tester.
+    */
+-  dispose(): void {
++  dispose() {
+     if (this._kernel) {
+       this._kernel.dispose();
+       this._kernel = null;
+@@ -528,7 +502,6 @@
+ 
+   /**
+    * Set up a new server websocket to pretend like it is a server kernel.
+-   * Use the newest protocol.
+    */
+   protected onSocket(sock: WebSocket): void {
+     super.onSocket(sock);
+@@ -537,11 +510,7 @@
+       if (msg instanceof Buffer) {
+         msg = new Uint8Array(msg).buffer;
+       }
+-      const data = deserialize(
+-        msg,
+-        KernelMessage.supportedKernelWebSocketProtocols
+-          .v1KernelWebsocketJupyterOrg
+-      );
++      const data = deserialize(msg);
+       if (data.header.msg_type === 'kernel_info_request') {
+         // First send status busy message.
+         this.parentHeader = data.header;
+@@ -631,10 +600,7 @@
+   /**
+    * Send the status from the server to the client.
+    */
+-  sendStatus(
+-    status: Kernel.Status,
+-    parentHeader?: KernelMessage.IHeader
+-  ): void {
++  sendStatus(status: Kernel.Status, parentHeader?: KernelMessage.IHeader) {
+     const msg = KernelMessage.createMessage({
+       msgType: 'status',
+       channel: 'iopub',
+@@ -650,16 +616,10 @@
+   }
+ 
+   /**
+-   * Send a kernel message from the server to the client with newest protocol.
++   * Send a kernel message from the server to the client.
+    */
+   send(msg: KernelMessage.IMessage): void {
+-    this.sendRaw(
+-      serialize(
+-        msg,
+-        KernelMessage.supportedKernelWebSocketProtocols
+-          .v1KernelWebsocketJupyterOrg
+-      )
+-    );
++    this.sendRaw(serialize(msg));
+   }
+ 
+   /**
+@@ -671,7 +631,6 @@
+ 
+   /**
+    * Set up a new server websocket to pretend like it is a server kernel.
+-   * Use the newest protocol.
+    */
+   protected onSocket(sock: WebSocket): void {
+     super.onSocket(sock);
+@@ -679,11 +638,7 @@
+       if (msg instanceof Buffer) {
+         msg = new Uint8Array(msg).buffer;
+       }
+-      const data = deserialize(
+-        msg,
+-        KernelMessage.supportedKernelWebSocketProtocols
+-          .v1KernelWebsocketJupyterOrg
+-      );
++      const data = deserialize(msg);
+       if (KernelMessage.isInfoRequestMsg(data)) {
+         // First send status busy message.
+         this.sendStatus('busy', data.header);
+@@ -722,7 +677,7 @@
+   /**
+    * Register the message callback with the websocket server.
+    */
+-  onMessage(cb: (msg: Terminal.IMessage) => void): void {
++  onMessage(cb: (msg: Terminal.IMessage) => void) {
+     this._onMessage = cb;
+   }
+ 
+@@ -754,6 +709,7 @@
+  * type B = MakeOptional<A, 'a'>
+  * const x: B = {b: 'test'}
+  */
+-type MakeOptional<T, K> = Pick<T, Exclude<keyof T, K>> & {
+-  [P in Extract<keyof T, K>]?: T[P];
+-};
++type MakeOptional<T, K> = Pick<T, Exclude<keyof T, K>> &
++  {
++    [P in Extract<keyof T, K>]?: T[P];
++  };

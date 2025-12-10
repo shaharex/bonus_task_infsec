@@ -1,0 +1,19 @@
+--- packages\notebook-extension\src\nboutput.ts (old)
++++ packages\notebook-extension\src\nboutput.ts (new)
+@@ -16,7 +16,6 @@
+ export const logNotebookOutput: JupyterFrontEndPlugin<void> = {
+   activate: activateNBOutput,
+   id: '@jupyterlab/notebook-extension:log-output',
+-  description: 'Adds cell outputs log to the application logger.',
+   requires: [INotebookTracker],
+   optional: [ILoggerRegistry],
+   autoStart: true
+@@ -26,7 +25,7 @@
+   app: JupyterFrontEnd,
+   nbtracker: INotebookTracker,
+   loggerRegistry: ILoggerRegistry | null
+-): void {
++) {
+   if (!loggerRegistry) {
+     // Automatically disable if logconsole is missing
+     return;

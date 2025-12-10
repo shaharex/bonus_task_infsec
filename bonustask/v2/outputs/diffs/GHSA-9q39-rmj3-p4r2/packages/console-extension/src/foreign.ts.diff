@@ -1,0 +1,28 @@
+--- packages\console-extension\src\foreign.ts (old)
++++ packages\console-extension\src\foreign.ts (new)
+@@ -18,11 +18,10 @@
+ import { AttachedProperty } from '@lumino/properties';
+ 
+ /**
+- * The console foreign handler.
++ * The console widget tracker provider.
+  */
+ export const foreign: JupyterFrontEndPlugin<void> = {
+   id: '@jupyterlab/console-extension:foreign',
+-  description: 'Add foreign handler of IOPub messages to the console.',
+   requires: [IConsoleTracker, ISettingRegistry, ITranslator],
+   optional: [ICommandPalette],
+   activate: activateForeign,
+@@ -97,12 +96,6 @@
+       tracker.currentWidget === shell.currentWidget
+   });
+ 
+-  const notify = () => {
+-    commands.notifyCommandChanged(toggleShowAllActivity);
+-  };
+-  tracker.currentChanged.connect(notify);
+-  shell.currentChanged?.connect(notify);
+-
+   if (palette) {
+     palette.addItem({
+       command: toggleShowAllActivity,

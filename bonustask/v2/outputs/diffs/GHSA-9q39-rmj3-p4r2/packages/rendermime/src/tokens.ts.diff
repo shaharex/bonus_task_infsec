@@ -1,0 +1,82 @@
+--- packages\rendermime\src\tokens.ts (old)
++++ packages\rendermime\src\tokens.ts (new)
+@@ -3,24 +3,25 @@
+ | Distributed under the terms of the Modified BSD License.
+ |----------------------------------------------------------------------------*/
+ 
++import { ISanitizer } from '@jupyterlab/apputils';
+ import { IRenderMime } from '@jupyterlab/rendermime-interfaces';
+ import { ITranslator } from '@jupyterlab/translation';
+ import { ReadonlyPartialJSONObject, Token } from '@lumino/coreutils';
+ import { MimeModel } from './mimemodel';
+ 
++/* tslint:disable */
+ /**
+  * The rendermime token.
+  */
+ export const IRenderMimeRegistry = new Token<IRenderMimeRegistry>(
+-  '@jupyterlab/rendermime:IRenderMimeRegistry',
+-  'A service for the rendermime registry for the application. Use this to create renderers for various mime-types in your extension. Many times it will be easier to create a "mime renderer extension" rather than using this service directly.'
++  '@jupyterlab/rendermime:IRenderMimeRegistry'
+ );
+ 
+ export interface IRenderMimeRegistry {
+   /**
+    * The sanitizer used by the rendermime instance.
+    */
+-  readonly sanitizer: IRenderMime.ISanitizer;
++  readonly sanitizer: ISanitizer;
+ 
+   /**
+    * The object used to resolve relative urls for the rendermime instance.
+@@ -36,11 +37,6 @@
+    * The LaTeX typesetter for the rendermime.
+    */
+   readonly latexTypesetter: IRenderMime.ILatexTypesetter | null;
+-
+-  /**
+-   * The Markdown parser for the rendermime.
+-   */
+-  readonly markdownParser: IRenderMime.IMarkdownParser | null;
+ 
+   /**
+    * The ordered list of mimeTypes.
+@@ -174,33 +170,21 @@
+     latexTypesetter?: IRenderMime.ILatexTypesetter;
+ 
+     /**
+-     * The new Markdown parser.
+-     */
+-    markdownParser?: IRenderMime.IMarkdownParser;
+-
+-    /**
+      * The application language translator.
+      */
+     translator?: ITranslator;
+   }
+ }
+ 
++/* tslint:enable */
++
++/* tslint:disable */
+ /**
+  * The latex typesetter token.
+  */
+ export const ILatexTypesetter = new Token<IRenderMime.ILatexTypesetter>(
+-  '@jupyterlab/rendermime:ILatexTypesetter',
+-  'A service for the LaTeX typesetter for the application. Use this if you want to typeset math in your extension.'
++  '@jupyterlab/rendermime:ILatexTypesetter'
+ );
+ 
+ export interface ILatexTypesetter extends IRenderMime.ILatexTypesetter {}
+-
+-/**
+- * The markdown parser token.
+- */
+-export const IMarkdownParser = new Token<IRenderMime.IMarkdownParser>(
+-  '@jupyterlab/rendermime:IMarkdownParser',
+-  'A service for rendering markdown syntax as HTML content.'
+-);
+-
+-export interface IMarkdownParser extends IRenderMime.IMarkdownParser {}
++/* tslint:enable */

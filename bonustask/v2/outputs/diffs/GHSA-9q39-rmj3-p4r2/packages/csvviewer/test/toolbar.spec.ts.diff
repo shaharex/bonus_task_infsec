@@ -1,0 +1,23 @@
+--- packages\csvviewer\test\toolbar.spec.ts (old)
++++ packages\csvviewer\test\toolbar.spec.ts (new)
+@@ -40,14 +40,17 @@
+ 
+     describe('#delimiterChanged', () => {
+       it('should emit a value when the dropdown value changes', () => {
+-        const parent = mockViewer();
+-        const widget = new CSVDelimiter({ widget: parent });
++        const widget = new CSVDelimiter({ widget: mockViewer() });
++        let delimiterTest = '';
+         const index = DELIMITERS.length - 1;
+         const wanted = DELIMITERS[index];
++        widget.delimiterChanged.connect((s, value) => {
++          delimiterTest = value;
++        });
+         Widget.attach(widget, document.body);
+         widget.selectNode.selectedIndex = index;
+         simulate(widget.selectNode, 'change');
+-        expect(parent.delimiter).toBe(wanted);
++        expect(delimiterTest).toBe(wanted);
+         widget.dispose();
+       });
+     });

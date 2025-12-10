@@ -1,0 +1,74 @@
+--- packages\logconsole\src\logger.ts (old)
++++ packages\logconsole\src\logger.ts (new)
+@@ -106,8 +106,7 @@
+  */
+ export class LoggerOutputAreaModel
+   extends OutputAreaModel
+-  implements ILoggerOutputAreaModel
+-{
++  implements ILoggerOutputAreaModel {
+   constructor({ maxLength, ...options }: LoggerOutputAreaModel.IOptions) {
+     super(options);
+     this.maxLength = maxLength;
+@@ -193,7 +192,7 @@
+   /**
+    * Construct a Logger.
+    *
+-   * @param options Constructor options
++   * @param source - The name of the log source.
+    */
+   constructor(options: Logger.IOptions) {
+     this.source = options.source;
+@@ -210,7 +209,7 @@
+    * Oldest entries will be trimmed to ensure the length is at most
+    * `.maxLength`.
+    */
+-  get maxLength(): number {
++  get maxLength() {
+     return this.outputAreaModel.maxLength;
+   }
+   set maxLength(value: number) {
+@@ -302,7 +301,7 @@
+    *
+    * @param log - The output to be logged.
+    */
+-  log(log: ILogPayload): void {
++  log(log: ILogPayload) {
+     // Filter by our current log level
+     if (
+       Private.LogLevel[log.level as keyof typeof Private.LogLevel] <
+@@ -346,7 +345,7 @@
+   /**
+    * Clear all outputs logged.
+    */
+-  clear(): void {
++  clear() {
+     this.outputAreaModel.clear(false);
+     this._contentChanged.emit('clear');
+   }
+@@ -354,7 +353,7 @@
+   /**
+    * Add a checkpoint to the log.
+    */
+-  checkpoint(): void {
++  checkpoint() {
+     this._log({
+       output: {
+         output_type: 'display_data',
+@@ -369,14 +368,14 @@
+   /**
+    * Whether the logger is disposed.
+    */
+-  get isDisposed(): boolean {
++  get isDisposed() {
+     return this._isDisposed;
+   }
+ 
+   /**
+    * Dispose the logger.
+    */
+-  dispose(): void {
++  dispose() {
+     if (this.isDisposed) {
+       return;
+     }

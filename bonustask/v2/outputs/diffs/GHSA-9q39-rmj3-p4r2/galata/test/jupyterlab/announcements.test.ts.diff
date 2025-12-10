@@ -1,0 +1,108 @@
+--- galata\test\jupyterlab\announcements.test.ts (old)
++++ galata\test\jupyterlab\announcements.test.ts (new)
+@@ -13,11 +13,13 @@
+ });
+ 
+ test('Announcements requires user agreement', async ({ page }) => {
+-  const notifications = await page.notifications;
++  const notifications = await page.evaluate(() => {
++    return (window.jupyterapp as any).notificationManager.notifications;
++  });
+ 
+   expect(notifications).toHaveLength(1);
+   expect(notifications[0].message).toEqual(
+-    'Would you like to get notified about official Jupyter news?'
++    'Would you like to receive official Jupyter news?\nPlease read the privacy policy.'
+   );
+   expect(notifications[0].options.actions).toHaveLength(3);
+   expect(notifications[0].options.actions[0].label).toEqual(
+@@ -72,10 +74,12 @@
+ 
+     await page.goto();
+ 
+-    const notifications = await page.notifications;
+-
+-    const updates = notifications.filter(
+-      n => n.options?.data?.tags?.includes('update')
++    const notifications = await page.evaluate(() => {
++      return (window.jupyterapp as any).notificationManager.notifications;
++    });
++
++    const updates = notifications.filter(n =>
++      n.options?.data?.tags?.includes('update')
+     );
+     expect(updates).toHaveLength(1);
+     expect(updates[0].message).toEqual(message);
+@@ -96,7 +100,9 @@
+ 
+     await page.goto();
+ 
+-    const notifications = await page.notifications;
++    const notifications = await page.evaluate(() => {
++      return (window.jupyterapp as any).notificationManager.notifications;
++    });
+ 
+     expect(
+       notifications.filter(n => n.options?.data?.tags?.includes('update'))
+@@ -123,7 +129,9 @@
+ 
+     await page.goto();
+ 
+-    const notifications = await page.notifications;
++    const notifications = await page.evaluate(() => {
++      return (window.jupyterapp as any).notificationManager.notifications;
++    });
+     expect(
+       notifications.filter(n => n.options?.data?.tags?.includes('update'))
+     ).toHaveLength(0);
+@@ -185,10 +193,12 @@
+ 
+     await page.goto();
+ 
+-    const notifications = await page.notifications;
+-
+-    const news = notifications.filter(
+-      n => n.options?.data?.tags?.includes('news')
++    const notifications = await page.evaluate(() => {
++      return (window.jupyterapp as any).notificationManager.notifications;
++    });
++
++    const news = notifications.filter(n =>
++      n.options?.data?.tags?.includes('news')
+     );
+     expect(news).toHaveLength(2);
+     expect(news.filter(n => n.options.data.id === id)[0].message).toEqual(
+@@ -212,10 +222,12 @@
+ 
+     await page.goto();
+ 
+-    const notifications = await page.notifications;
+-
+-    const news = notifications.filter(
+-      n => n.options?.data?.tags?.includes('news')
++    const notifications = await page.evaluate(() => {
++      return (window.jupyterapp as any).notificationManager.notifications;
++    });
++
++    const news = notifications.filter(n =>
++      n.options?.data?.tags?.includes('news')
+     );
+     expect(news).toHaveLength(0);
+   });
+@@ -239,10 +251,12 @@
+ 
+     await page.goto();
+ 
+-    const notifications = await page.notifications;
+-
+-    const news = notifications.filter(
+-      n => n.options?.data?.tags?.includes('news')
++    const notifications = await page.evaluate(() => {
++      return (window.jupyterapp as any).notificationManager.notifications;
++    });
++
++    const news = notifications.filter(n =>
++      n.options?.data?.tags?.includes('news')
+     );
+     expect(news).toHaveLength(1);
+     expect(news[0].id).not.toEqual(id);

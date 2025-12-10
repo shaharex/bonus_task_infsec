@@ -1,0 +1,6 @@
+
+CWE-79 XSS Patch Localization Task
+Advisory: GHSA-9q39-rmj3-p4r2
+
+Identify which changes in the diffs correspond to fixing an XSS vulnerability.
+Return JSON list of suspicious hunks with line numbers and reasoning.

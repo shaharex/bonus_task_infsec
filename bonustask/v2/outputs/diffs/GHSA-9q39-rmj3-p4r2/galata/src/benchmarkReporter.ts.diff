@@ -1,0 +1,140 @@
+--- galata\src\benchmarkReporter.ts (old)
++++ galata\src\benchmarkReporter.ts (new)
+@@ -1,8 +1,3 @@
+-/*
+- * Copyright (c) Jupyter Development Team.
+- * Distributed under the terms of the Modified BSD License.
+- */
+-
+ import { JSONObject } from '@lumino/coreutils';
+ import { chromium, firefox, webkit } from '@playwright/test';
+ import {
+@@ -344,9 +339,6 @@
+ 
+     this._comparison = options.comparison ?? 'snapshot';
+ 
+-    this._expectedReference =
+-      process.env['BENCHMARK_EXPECTED_REFERENCE'] ??
+-      benchmark.DEFAULT_EXPECTED_REFERENCE;
+     this._reference =
+       process.env['BENCHMARK_REFERENCE'] ?? benchmark.DEFAULT_REFERENCE;
+ 
+@@ -389,9 +381,9 @@
+         ...result.attachments
+           .filter(a => a.name === benchmark.DEFAULT_NAME_ATTACHMENT)
+           .map(raw => {
+-            const json = JSON.parse(
++            const json = (JSON.parse(
+               raw.body?.toString() ?? '{}'
+-            ) as any as benchmark.IRecord;
++            ) as any) as benchmark.IRecord;
+             return { ...json, reference: this._reference };
+           })
+       );
+@@ -437,10 +429,7 @@
+         if (!hasExpectations || this.config.updateSnapshots === 'all') {
+           expectations = {
+             values: report.values.map(d => {
+-              return {
+-                ...d,
+-                reference: this._expectedReference
+-              };
++              return { ...d, reference: benchmark.DEFAULT_EXPECTED_REFERENCE };
+             }),
+             metadata: report.metadata
+           };
+@@ -461,8 +450,10 @@
+       }
+ 
+       // - Create report
+-      const [reportContentString, reportExtension] =
+-        await this._buildTextReport(allData);
++      const [
++        reportContentString,
++        reportExtension
++      ] = await this._buildTextReport(allData);
+       const reportFile = path.resolve(
+         outputDir,
+         `${baseName}.${reportExtension}`
+@@ -495,7 +486,7 @@
+    * @param allData all test records.
+    * @param comparison logic of test comparisons:
+    * 'snapshot' or 'project'; default 'snapshot'.
+-   * @returns A list of two strings, the first one
++   * @return A list of two strings, the first one
+    * is the content of report, the second one is the extension of report file.
+    */
+   protected async defaultTextReportFactory(
+@@ -548,12 +539,10 @@
+     }
+ 
+     const compare =
+-      (
+-        groups.values().next().value?.values().next().value as Map<
+-          string,
+-          Map<string, number[]>
+-        >
+-      ).size === 2;
++      (groups.values().next().value?.values().next().value as Map<
++        string,
++        Map<string, number[]>
++      >).size === 2;
+ 
+     // - Create report
+     const reportContent = new Array<string>(
+@@ -574,13 +563,10 @@
+ 
+     let header = '| Test file |';
+     let nFiles = 0;
+-    for (const [file] of groups
+-      .values()
+-      .next()
+-      .value.values()
+-      .next()
+-      .value.values()
+-      .next().value) {
++    for (const [
++      file
++    ] of groups.values().next().value.values().next().value.values().next()
++      .value) {
+       header += ` ${file} |`;
+       nFiles++;
+     }
+@@ -588,7 +574,7 @@
+     reportContent.push(new Array(nFiles + 2).fill('|').join(' --- '));
+     const filler = new Array(nFiles).fill('|').join(' ');
+ 
+-    let changeReference = this._expectedReference;
++    let changeReference = benchmark.DEFAULT_EXPECTED_REFERENCE;
+ 
+     for (const [test, testGroup] of groups) {
+       reportContent.push(`| **${test}** | ` + filler);
+@@ -602,7 +588,10 @@
+             const [q1, median, q3] = vs.quartiles(dataGroup);
+ 
+             if (compare) {
+-              if (reference === this._reference || !actual.has(filename)) {
++              if (
++                reference === benchmark.DEFAULT_REFERENCE ||
++                !actual.has(filename)
++              ) {
+                 actual.set(filename, dataGroup);
+               } else {
+                 changeReference = reference;
+@@ -672,7 +661,7 @@
+    * @param allData all test records.
+    * @param comparison logic of test comparisons:
+    * 'snapshot' or 'project'; default 'snapshot'.
+-   * @returns VegaLite configuration
++   * @return VegaLite configuration
+    */
+   protected defaultVegaLiteConfigFactory(
+     allData: Array<IReportRecord>,
+@@ -740,7 +729,6 @@
+   protected config: FullConfig;
+   protected suite: Suite;
+   private _comparison: 'snapshot' | 'project';
+-  private _expectedReference: string;
+   private _outputFile: string;
+   private _reference: string;
+   private _report: IReportRecord[];

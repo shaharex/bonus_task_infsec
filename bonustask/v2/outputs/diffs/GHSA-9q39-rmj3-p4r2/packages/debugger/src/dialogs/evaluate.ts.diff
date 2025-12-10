@@ -1,0 +1,60 @@
+--- packages\debugger\src\dialogs\evaluate.ts (old)
++++ packages\debugger\src\dialogs\evaluate.ts (new)
+@@ -1,11 +1,6 @@
+-/*
+- * Copyright (c) Jupyter Development Team.
+- * Distributed under the terms of the Modified BSD License.
+- */
+-
+ import { Dialog } from '@jupyterlab/apputils';
+ 
+-import { Cell, CodeCell, CodeCellModel } from '@jupyterlab/cells';
++import { CodeCell, CodeCellModel } from '@jupyterlab/cells';
+ 
+ import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
+ 
+@@ -25,11 +20,6 @@
+      * The top level text for the dialog. Defaults to an empty string.
+      */
+     title: string;
+-
+-    /**
+-     * Cell content factory.
+-     */
+-    contentFactory: Cell.IContentFactory;
+ 
+     /**
+      * The mime renderer for the cell widget.
+@@ -108,19 +98,17 @@
+   constructor(options: DebuggerEvaluateDialog.IOptions) {
+     super();
+ 
+-    const { contentFactory, rendermime, mimeType } = options;
++    const { rendermime, mimeType } = options;
+ 
+-    const model = new CodeCellModel();
++    const model = new CodeCellModel({});
+     model.mimeType = mimeType ?? '';
+     this._prompt = new CodeCell({
+-      contentFactory,
+       rendermime,
+-      model,
+-      placeholder: false
++      model
+     }).initializeState();
+ 
+     // explicitly remove the prompt in front of the input area
+-    this._prompt.inputArea!.promptNode.remove();
++    this._prompt.inputArea.promptNode.remove();
+ 
+     this.node.appendChild(this._prompt.node);
+   }
+@@ -129,7 +117,7 @@
+    * Get the text specified by the user
+    */
+   getValue(): string {
+-    return this._prompt.model.sharedModel.getSource();
++    return this._prompt.model.value.text;
+   }
+ 
+   /**

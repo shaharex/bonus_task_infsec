@@ -1,0 +1,62 @@
+--- galata\test\jupyterlab\terminal.test.ts (old)
++++ galata\test\jupyterlab\terminal.test.ts (new)
+@@ -1,8 +1,3 @@
+-/*
+- * Copyright (c) Jupyter Development Team.
+- * Distributed under the terms of the Modified BSD License.
+- */
+-
+ import { expect, test } from '@jupyterlab/galata';
+ 
+ const TERMINAL_SELECTOR = '.jp-Terminal';
+@@ -11,7 +6,7 @@
+ test.describe('Terminal', () => {
+   test.beforeEach(async ({ page }) => {
+     await page.menu.clickMenuItem('File>New>Terminal');
+-    await page.locator(TERMINAL_SELECTOR).waitFor();
++    await page.waitForSelector(TERMINAL_SELECTOR);
+   });
+ 
+   test.describe('Open', () => {
+@@ -90,7 +85,7 @@
+ });
+ 
+ test('Terminal should open in Launcher cwd', async ({ page, tmpPath }) => {
+-  await page.locator(`.jp-Launcher-cwd > h3:has-text("${tmpPath}")`).waitFor();
++  await page.waitForSelector(`.jp-Launcher-cwd > h3:has-text("${tmpPath}")`);
+ 
+   await page.locator('[role="main"] >> p:has-text("Terminal")').click();
+ 
+@@ -105,7 +100,7 @@
+ });
+ 
+ test('Terminal web link', async ({ page, tmpPath }) => {
+-  await page.locator(`.jp-Launcher-cwd > h3:has-text("${tmpPath}")`).waitFor();
++  await page.waitForSelector(`.jp-Launcher-cwd > h3:has-text("${tmpPath}")`);
+ 
+   await page.locator('[role="main"] >> p:has-text("Terminal")').click();
+ 
+@@ -117,13 +112,16 @@
+   await page.keyboard.press('Enter');
+   await page.waitForTimeout(1000);
+   await Promise.all([
+-    terminal.locator('.jp-Terminal-body .xterm-cursor-pointer').waitFor(),
+-    terminal.locator('canvas.xterm-link-layer').hover({
+-      position: {
+-        x: 60,
+-        y: 23
+-      }
+-    })
++    terminal.locator('.jp-Terminal-body.xterm-cursor-pointer').waitFor(),
++    terminal
++      .locator('canvas')
++      .last()
++      .hover({
++        position: {
++          x: 60,
++          y: 23
++        }
++      })
+   ]);
+   expect(await terminal.screenshot()).toMatchSnapshot('web-links-term.png');
+ });

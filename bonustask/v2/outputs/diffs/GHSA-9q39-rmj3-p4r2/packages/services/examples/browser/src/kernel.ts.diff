@@ -1,0 +1,11 @@
+--- packages\services\examples\browser\src\kernel.ts (old)
++++ packages\services\examples\browser\src\kernel.ts (new)
+@@ -5,7 +5,7 @@
+ 
+ import { log } from './log';
+ 
+-export async function main(): Promise<void> {
++export async function main() {
+   // Start a python kernel
+   const kernelManager = new KernelManager();
+   const kernel = await kernelManager.startNew({ name: 'python' });

@@ -1,0 +1,13 @@
+--- packages\markdownviewer\src\tokens.ts (old)
++++ packages\markdownviewer\src\tokens.ts (new)
+@@ -9,9 +9,7 @@
+  * The markdownviewer tracker token.
+  */
+ export const IMarkdownViewerTracker = new Token<IMarkdownViewerTracker>(
+-  '@jupyterlab/markdownviewer:IMarkdownViewerTracker',
+-  `A widget tracker for markdown
+-  document viewers. Use this if you want to iterate over and interact with rendered markdown documents.`
++  '@jupyterlab/markdownviewer:IMarkdownViewerTracker'
+ );
+ 
+ /**

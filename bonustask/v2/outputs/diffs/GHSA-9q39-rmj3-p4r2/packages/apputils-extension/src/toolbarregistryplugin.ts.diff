@@ -1,0 +1,19 @@
+--- packages\apputils-extension\src\toolbarregistryplugin.ts (old)
++++ packages\apputils-extension\src\toolbarregistryplugin.ts (new)
+@@ -1,8 +1,3 @@
+-/*
+- * Copyright (c) Jupyter Development Team.
+- * Distributed under the terms of the Modified BSD License.
+- */
+-
+ import {
+   JupyterFrontEnd,
+   JupyterFrontEndPlugin
+@@ -18,7 +13,6 @@
+  */
+ export const toolbarRegistry: JupyterFrontEndPlugin<IToolbarWidgetRegistry> = {
+   id: '@jupyterlab/apputils-extension:toolbar-registry',
+-  description: 'Provides toolbar items registry.',
+   autoStart: true,
+   provides: IToolbarWidgetRegistry,
+   activate: (app: JupyterFrontEnd) => {

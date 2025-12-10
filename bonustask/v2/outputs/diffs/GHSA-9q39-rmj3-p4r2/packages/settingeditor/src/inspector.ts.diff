@@ -1,0 +1,11 @@
+--- packages\settingeditor\src\inspector.ts (old)
++++ packages\settingeditor\src\inspector.ts (new)
+@@ -120,7 +120,7 @@
+         return `**\`[${this._trans.__('syntax error')}]\`** *${error.message}*`;
+       case 'type':
+         return `**\`[${this._trans.__('type error')}]\`**
+-          \`${error.instancePath}\` ${error.message}`;
++          \`${error.dataPath}\` ${error.message}`;
+       default:
+         return `**\`[${this._trans.__('error')}]\`** *${error.message}*`;
+     }

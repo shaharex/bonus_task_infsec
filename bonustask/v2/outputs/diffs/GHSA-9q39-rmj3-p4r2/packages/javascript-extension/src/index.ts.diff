@@ -1,0 +1,10 @@
+--- packages\javascript-extension\src\index.ts (old)
++++ packages\javascript-extension\src\index.ts (new)
+@@ -68,7 +68,6 @@
+ 
+ const extension: IRenderMime.IExtension = {
+   id: '@jupyterlab/javascript-extension:factory',
+-  description: 'Adds renderer for JavaScript content.',
+   rendererFactory,
+   rank: 0,
+   dataType: 'string'

@@ -1,0 +1,11 @@
+--- packages\services\src\terminal\restapi.ts (old)
++++ packages\services\src\terminal\restapi.ts (new)
+@@ -124,7 +124,7 @@
+   /**
+    * Throw an error if terminals are not available.
+    */
+-  export function errorIfNotAvailable(): void {
++  export function errorIfNotAvailable() {
+     if (!isAvailable()) {
+       throw new Error('Terminals Unavailable');
+     }

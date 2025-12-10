@@ -1,0 +1,14 @@
+
+Given: (1) an advisory short description: 
+(2) the vulnerable version ref: None
+(3) the patched version ref: None
+(4) the unified git diff (or GumTree AST diff) between versions.
+Answer in JSON with fields:
+  - fixes_vulnerable_version: "yes" | "no" | "maybe"
+  - confidence: 0-100
+  - short_rationale: one or two sentences
+  - remediation_notes: optional steps to verify (tests to run, inputs to fuzz, etc.)
+Be precise and conservative with confidence.
+
+
+Attach unified git diff file: outputs\diffs\GHSA-jxgr-gcj5-cqqg\nautobot_None_to_None.diff

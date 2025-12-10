@@ -1,0 +1,11 @@
+--- buildutils\src\update-dist-tag.ts (old)
++++ buildutils\src\update-dist-tag.ts (new)
+@@ -6,7 +6,7 @@
+ import * as path from 'path';
+ import * as utils from './utils';
+ import packageJson from 'package-json';
+-import { program as commander } from 'commander';
++import commander from 'commander';
+ import semver from 'semver';
+ 
+ /**

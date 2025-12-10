@@ -1,0 +1,26 @@
+--- packages\docmanager\test\widgetmanager.spec.ts (old)
++++ packages\docmanager\test\widgetmanager.spec.ts (new)
+@@ -10,8 +10,12 @@
+   TextModelFactory
+ } from '@jupyterlab/docregistry';
+ import { ServiceManager } from '@jupyterlab/services';
+-import { acceptDialog, dangerDialog, dismissDialog } from '@jupyterlab/testing';
+-import { ServiceManagerMock } from '@jupyterlab/services/lib/testutils';
++import {
++  acceptDialog,
++  dangerDialog,
++  dismissDialog
++} from '@jupyterlab/testutils';
++import * as Mock from '@jupyterlab/testutils/lib/mock';
+ import { PromiseDelegate, UUID } from '@lumino/coreutils';
+ import { IMessageHandler, Message, MessageLoop } from '@lumino/messaging';
+ import { Widget } from '@lumino/widgets';
+@@ -63,7 +67,7 @@
+   });
+ 
+   beforeAll(() => {
+-    services = new ServiceManagerMock();
++    services = new Mock.ServiceManagerMock();
+   });
+ 
+   beforeEach(() => {

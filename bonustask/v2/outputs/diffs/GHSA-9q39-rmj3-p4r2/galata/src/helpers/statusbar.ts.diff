@@ -1,0 +1,44 @@
+--- galata\src\helpers\statusbar.ts (old)
++++ galata\src\helpers\statusbar.ts (new)
+@@ -8,10 +8,7 @@
+  * Status Bar helpers
+  */
+ export class StatusBarHelper {
+-  constructor(
+-    readonly page: Page,
+-    readonly menu: MenuHelper
+-  ) {}
++  constructor(readonly page: Page, readonly menu: MenuHelper) {}
+ 
+   /**
+    * Whether the status bar is visible or not
+@@ -23,7 +20,7 @@
+       const statusBar = document.querySelector(
+         '#jp-main-statusbar'
+       ) as HTMLElement;
+-      return window.galata.isElementVisible(statusBar);
++      return window.galataip.isElementVisible(statusBar);
+     });
+   }
+ 
+@@ -37,7 +34,9 @@
+     }
+ 
+     await this.menu.clickMenuItem('View>Show Status Bar');
+-    await this.page.locator('#jp-main-statusbar').waitFor({ state: 'visible' });
++    await this.page.waitForSelector('#jp-main-statusbar', {
++      state: 'visible'
++    });
+   }
+ 
+   /**
+@@ -50,6 +49,8 @@
+     }
+ 
+     await this.menu.clickMenuItem('View>Show Status Bar');
+-    await this.page.locator('#jp-main-statusbar').waitFor({ state: 'hidden' });
++    await this.page.waitForSelector('#jp-main-statusbar', {
++      state: 'hidden'
++    });
+   }
+ }

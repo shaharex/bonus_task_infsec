@@ -1,0 +1,11 @@
+--- packages\services\examples\browser\src\config.ts (old)
++++ packages\services\examples\browser\src\config.ts (new)
+@@ -5,7 +5,7 @@
+ 
+ import { log } from './log';
+ 
+-export async function main(): Promise<void> {
++export async function main() {
+   log('Config');
+   // The base url of the Jupyter server.
+ 

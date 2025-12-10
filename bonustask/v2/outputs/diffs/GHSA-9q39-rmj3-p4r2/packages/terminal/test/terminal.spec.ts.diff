@@ -1,0 +1,44 @@
+--- packages\terminal\test\terminal.spec.ts (old)
++++ packages\terminal\test\terminal.spec.ts (new)
+@@ -2,7 +2,11 @@
+ // Distributed under the terms of the Modified BSD License.
+ 
+ import { TerminalManager, Terminal as TerminalNS } from '@jupyterlab/services';
+-import { framePromise, JupyterServer, testEmission } from '@jupyterlab/testing';
++import {
++  framePromise,
++  JupyterServer,
++  testEmission
++} from '@jupyterlab/testutils';
+ import { Message, MessageLoop } from '@lumino/messaging';
+ import { Widget } from '@lumino/widgets';
+ import { Terminal } from '../src';
+@@ -11,7 +15,7 @@
+ 
+ beforeAll(async () => {
+   await server.start();
+-}, 30000);
++});
+ 
+ afterAll(async () => {
+   await server.shutdown();
+@@ -66,7 +70,7 @@
+       widget = new LogTerminal(session, { autoFit: false });
+       Widget.attach(widget, document.body);
+       return framePromise();
+-    }, 30000);
++    });
+ 
+     afterEach(() => {
+       widget.dispose();
+@@ -134,8 +138,8 @@
+     });
+ 
+     describe('#refresh()', () => {
+-      it('should refresh the widget', async () => {
+-        await expect(widget.refresh()).resolves.not.toThrow();
++      it('should refresh the widget', () => {
++        return widget.refresh();
+       });
+     });
+ 

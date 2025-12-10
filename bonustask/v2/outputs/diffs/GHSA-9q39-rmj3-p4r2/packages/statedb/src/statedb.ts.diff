@@ -1,0 +1,39 @@
+--- packages\statedb\src\statedb.ts (old)
++++ packages\statedb\src\statedb.ts (new)
+@@ -11,8 +11,7 @@
+  */
+ export class StateDB<
+   T extends ReadonlyPartialJSONValue = ReadonlyPartialJSONValue
+-> implements IStateDB<T>
+-{
++> implements IStateDB<T> {
+   /**
+    * Create a new state database.
+    *
+@@ -85,7 +84,7 @@
+   /**
+    * Retrieve all the saved bundles for a namespace.
+    *
+-   * @param namespace The namespace prefix to retrieve.
++   * @param filter - The namespace prefix to retrieve.
+    *
+    * @returns A promise that bears a collection of payloads for a namespace.
+    *
+@@ -148,13 +147,10 @@
+ 
+     const { ids, values } = await this._list();
+ 
+-    return values.reduce(
+-      (acc, val, idx) => {
+-        acc[ids[idx]] = val;
+-        return acc;
+-      },
+-      {} as { [id: string]: T }
+-    );
++    return values.reduce((acc, val, idx) => {
++      acc[ids[idx]] = val;
++      return acc;
++    }, {} as { [id: string]: T });
+   }
+ 
+   /**

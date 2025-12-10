@@ -1,0 +1,12 @@
+--- packages\notebook\src\tracker.ts (old)
++++ packages\notebook\src\tracker.ts (new)
+@@ -10,8 +10,7 @@
+ 
+ export class NotebookTracker
+   extends WidgetTracker<NotebookPanel>
+-  implements INotebookTracker
+-{
++  implements INotebookTracker {
+   /**
+    * The currently focused cell.
+    *

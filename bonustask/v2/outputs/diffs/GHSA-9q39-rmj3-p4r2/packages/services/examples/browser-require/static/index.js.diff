@@ -1,0 +1,38 @@
+--- packages\services\examples\browser-require\static\index.js (old)
++++ packages\services\examples\browser-require\static\index.js (new)
+@@ -1,8 +1,3 @@
+-/*
+- * Copyright (c) Jupyter Development Team.
+- * Distributed under the terms of the Modified BSD License.
+- */
+-
+ require(['jquery', '@jupyterlab/services'], function($, services) {
+   /* eslint-disable no-console */
+   console.log('Starting example');
+@@ -15,20 +10,12 @@
+   // start a single kernel for the page
+   kernelManager.startNew(kernelOptions).then(function(kernel) {
+     console.log('Kernel started:', kernel);
+-    const waitForIdle = (_, status) => {
+-      if( status === 'idle' ) {
+-        kernel.statusChanged.disconnect(waitForIdle)
+-        kernel.requestKernelInfo().then(function(reply) {
+-          const content = reply.content;
+-          $('#kernel-info').text(content.banner);
+-          console.log('Kernel info:', content);
+-          console.log('Example started!');
+-        });
+-      }
+-    };
+-
+-    kernel.statusChanged.connect(waitForIdle);
+-
++    kernel.requestKernelInfo().then(function(reply) {
++      const content = reply.content;
++      $('#kernel-info').text(content.banner);
++      console.log('Kernel info:', content);
++      console.log('Example started!');
++    });
+     $('#run').click(function() {
+       const code = $('#cell').val();
+       console.log('Executing:', code);

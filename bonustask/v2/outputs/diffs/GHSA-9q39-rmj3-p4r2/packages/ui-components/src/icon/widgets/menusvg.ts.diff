@@ -1,0 +1,41 @@
+--- packages\ui-components\src\icon\widgets\menusvg.ts (old)
++++ packages\ui-components\src\icon\widgets\menusvg.ts (new)
+@@ -171,6 +171,15 @@
+         return h.div({ className }, checkIcon, data.item.iconLabel);
+       }
+ 
++      /* <DEPRECATED> */
++      if (typeof data.item.icon === 'string') {
++        return h.div(
++          { className: classes(className, 'jp-Icon') },
++          data.item.iconLabel
++        );
++      }
++      /* </DEPRECATED> */
++
+       // if data.item.icon is undefined, it will be ignored
+       return h.div({ className }, data.item.icon!, data.item.iconLabel);
+     }
+@@ -184,6 +193,9 @@
+      */
+     createIconClass(data: Menu.IRenderData): string {
+       let name = 'lm-Menu-itemIcon';
++      /* <DEPRECATED> */
++      name += ' p-Menu-itemIcon';
++      /* </DEPRECATED> */
+ 
+       if (data.item.type === 'separator') {
+         return classes(data.item.iconClass, name);
+@@ -204,7 +216,11 @@
+      * @returns A virtual element representing the submenu icon.
+      */
+     renderSubmenu(data: Menu.IRenderData): VirtualElement {
+-      const className = 'lm-Menu-itemSubmenuIcon';
++      const className =
++        'lm-Menu-itemSubmenuIcon' +
++        /* <DEPRECATED> */
++        ' p-Menu-itemSubmenuIcon';
++      /* </DEPRECATED> */
+ 
+       if (data.item.type === 'submenu') {
+         return h.div({ className }, submenuIcon);

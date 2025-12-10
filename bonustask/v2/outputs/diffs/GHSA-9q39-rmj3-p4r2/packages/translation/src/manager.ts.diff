@@ -1,0 +1,13 @@
+--- packages\translation\src\manager.ts (old)
++++ packages\translation\src\manager.ts (new)
+@@ -18,10 +18,6 @@
+     this._connector = new TranslatorConnector(translationsUrl, serverSettings);
+     this._stringsPrefix = stringsPrefix || '';
+     this._englishBundle = new Gettext({ stringsPrefix: this._stringsPrefix });
+-  }
+-
+-  get languageCode(): string {
+-    return this._currentLocale;
+   }
+ 
+   /**

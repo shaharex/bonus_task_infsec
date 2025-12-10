@@ -1,0 +1,40 @@
+--- packages\ui-components\src\icon\widgets\commandpalettesvg.ts (old)
++++ packages\ui-components\src\icon\widgets\commandpalettesvg.ts (new)
+@@ -28,7 +28,13 @@
+       const content = this.formatHeader(data);
+       return h.li(
+         {
+-          className: classes('lm-CommandPalette-header', 'jp-icon-hoverShow')
++          className: classes(
++            'lm-CommandPalette-header',
++            'jp-icon-hoverShow',
++            /* <DEPRECATED> */
++            'p-CommandPalette-header'
++            /* </DEPRECATED> */
++          )
+         },
+         content,
+         h.span(searchHeaderIcon)
+@@ -50,6 +56,12 @@
+         return h.div({ className }, checkIcon, data.item.iconLabel);
+       }
+ 
++      /* <DEPRECATED> */
++      if (typeof data.item.icon === 'string') {
++        return h.div({ className }, data.item.iconLabel);
++      }
++      /* </DEPRECATED> */
++
+       // if data.item.icon is undefined, it will be ignored
+       return h.div({ className }, data.item.icon!, data.item.iconLabel);
+     }
+@@ -63,6 +75,9 @@
+      */
+     createIconClass(data: CommandPalette.IItemRenderData): string {
+       let name = 'lm-CommandPalette-itemIcon';
++      /* <DEPRECATED> */
++      name += ' p-CommandPalette-itemIcon';
++      /* </DEPRECATED> */
+ 
+       return classes(
+         LabIconStyle.styleClass({

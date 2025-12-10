@@ -1,0 +1,209 @@
+--- packages\application\src\layoutrestorer.ts (old)
++++ packages\application\src\layoutrestorer.ts (new)
+@@ -23,8 +23,7 @@
+  * The layout restorer token.
+  */
+ export const ILayoutRestorer = new Token<ILayoutRestorer>(
+-  '@jupyterlab/application:ILayoutRestorer',
+-  'A service providing application layout restoration functionality. Use this to have your activities restored across page loads.'
++  '@jupyterlab/application:ILayoutRestorer'
+ );
+ 
+ /**
+@@ -177,7 +176,6 @@
+       downArea: null,
+       leftArea: null,
+       rightArea: null,
+-      topArea: null,
+       relativeSizes: null
+     };
+     const layout = this._connector.fetch(KEY);
+@@ -189,8 +187,13 @@
+         return blank;
+       }
+ 
+-      const { main, down, left, right, relativeSizes, top } =
+-        data as Private.ILayout;
++      const {
++        main,
++        down,
++        left,
++        right,
++        relativeSizes
++      } = data as Private.ILayout;
+ 
+       // If any data exists, then this is not a fresh session.
+       const fresh = false;
+@@ -218,8 +221,7 @@
+         downArea,
+         leftArea,
+         rightArea,
+-        relativeSizes: relativeSizes || null,
+-        topArea: (top as any) ?? null
++        relativeSizes: relativeSizes || null
+       };
+     } catch (error) {
+       return blank;
+@@ -323,7 +325,7 @@
+   /**
+    * Save the layout state for the application.
+    */
+-  save(layout: ILabShell.ILayout): Promise<void> {
++  save(data: ILabShell.ILayout): Promise<void> {
+     // If there are promises that are unresolved, bail.
+     if (!this._promisesDone) {
+       const warning = 'save() was called prematurely.';
+@@ -332,16 +334,14 @@
+     }
+ 
+     const dehydrated: Private.ILayout = {};
+-
+     // Save the cached main area layout if restoration is deferred.
+     dehydrated.main = this.isDeferred
+       ? this._deferredMainArea
+-      : this._dehydrateMainArea(layout.mainArea);
+-    dehydrated.down = this._dehydrateDownArea(layout.downArea);
+-    dehydrated.left = this._dehydrateSideArea(layout.leftArea);
+-    dehydrated.right = this._dehydrateSideArea(layout.rightArea);
+-    dehydrated.relativeSizes = layout.relativeSizes;
+-    dehydrated.top = { ...layout.topArea };
++      : this._dehydrateMainArea(data.mainArea);
++    dehydrated.down = this._dehydrateDownArea(data.downArea);
++    dehydrated.left = this._dehydrateSideArea(data.leftArea);
++    dehydrated.right = this._dehydrateSideArea(data.rightArea);
++    dehydrated.relativeSizes = data.relativeSizes;
+ 
+     return this._connector.save(KEY, dehydrated);
+   }
+@@ -359,7 +359,7 @@
+   }
+ 
+   /**
+-   * Rehydrate a serialized main area description object.
++   * Reydrate a serialized main area description object.
+    *
+    * #### Notes
+    * This function consumes data that can become corrupted, so it uses type
+@@ -405,7 +405,7 @@
+   }
+ 
+   /**
+-   * Rehydrate a serialized side area description object.
++   * Reydrate a serialized side area description object.
+    *
+    * #### Notes
+    * This function consumes data that can become corrupted, so it uses type
+@@ -446,10 +446,7 @@
+     if (!area) {
+       return null;
+     }
+-    const dehydrated: Private.ISideArea = {
+-      collapsed: area.collapsed,
+-      visible: area.visible
+-    };
++    const dehydrated: Private.ISideArea = { collapsed: area.collapsed };
+     if (area.currentWidget) {
+       const current = Private.nameProperty.get(area.currentWidget);
+       if (current) {
+@@ -461,19 +458,11 @@
+         .map(widget => Private.nameProperty.get(widget))
+         .filter(name => !!name);
+     }
+-    if (area.widgetStates) {
+-      dehydrated.widgetStates = area.widgetStates as {
+-        [id: string]: {
+-          sizes: number[] | null;
+-          expansionStates: boolean[] | null;
+-        };
+-      };
+-    }
+     return dehydrated;
+   }
+ 
+   /**
+-   * Rehydrate a serialized side area description object.
++   * Reydrate a serialized side area description object.
+    *
+    * #### Notes
+    * This function consumes data that can become corrupted, so it uses type
+@@ -483,18 +472,7 @@
+     area?: Private.ISideArea | null
+   ): ILabShell.ISideArea {
+     if (!area) {
+-      return {
+-        collapsed: true,
+-        currentWidget: null,
+-        visible: true,
+-        widgets: null,
+-        widgetStates: {
+-          ['null']: {
+-            sizes: null,
+-            expansionStates: null
+-          }
+-        }
+-      };
++      return { collapsed: true, currentWidget: null, widgets: null };
+     }
+     const internal = this._widgets;
+     const collapsed = area.collapsed ?? false;
+@@ -509,18 +487,10 @@
+             internal.has(`${name}`) ? internal.get(`${name}`) : null
+           )
+           .filter(widget => !!widget);
+-    const widgetStates = area.widgetStates as {
+-      [id: string]: {
+-        sizes: number[] | null;
+-        expansionStates: boolean[] | null;
+-      };
+-    };
+     return {
+       collapsed,
+       currentWidget: currentWidget!,
+-      widgets: widgets as Widget[] | null,
+-      visible: area.visible ?? true,
+-      widgetStates: widgetStates
++      widgets: widgets as Widget[] | null
+     };
+   }
+ 
+@@ -616,11 +586,6 @@
+      * The relatives sizes of the areas of the user interface.
+      */
+     relativeSizes?: number[] | null;
+-
+-    /**
+-     * The restorable description of the top area in the user interface.
+-     */
+-    top?: ITopArea | null;
+   }
+ 
+   /**
+@@ -658,11 +623,6 @@
+     current?: string | null;
+ 
+     /**
+-     * A flag denoting whether the side tab bar is visible.
+-     */
+-    visible?: boolean | null;
+-
+-    /**
+      * The collection of widgets held by the sidebar.
+      */
+     widgets?: Array<string> | null;
+@@ -686,16 +646,6 @@
+      * The index of the selected tab.
+      */
+     currentIndex: number;
+-  }
+-
+-  /**
+-   * The restorable description of the top area in the user interface.
+-   */
+-  export interface ITopArea extends PartialJSONObject {
+-    /**
+-     * Top area visibility in simple mode.
+-     */
+-    readonly simpleVisibility?: boolean;
+   }
+ 
+   /**

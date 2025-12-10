@@ -1,0 +1,14 @@
+--- packages\ui-components\src\index.ts (old)
++++ packages\ui-components\src\index.ts (new)
+@@ -5,9 +5,9 @@
+  * @module ui-components
+  */
+ 
++export * from './blueprint';
+ export * from './components';
+ export * from './icon';
+-export * from './hoverbox';
+ export * from './tokens';
+ export * from './utils';
+-export * from './FormRendererRegistry';
++export * from './FormComponentRegistry';

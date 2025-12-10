@@ -1,0 +1,233 @@
+--- packages\filebrowser\test\openfiledialog.spec.ts (old)
++++ packages\filebrowser\test\openfiledialog.spec.ts (new)
+@@ -1,9 +1,8 @@
+ // Copyright (c) Jupyter Development Team.
+ // Distributed under the terms of the Modified BSD License.
+-import { PathExt } from '@jupyterlab/coreutils';
++
+ import { DocumentManager, IDocumentManager } from '@jupyterlab/docmanager';
+ import { DocumentRegistry, TextModelFactory } from '@jupyterlab/docregistry';
+-import { DocumentWidgetOpenerMock } from '@jupyterlab/docregistry/lib/testutils';
+ import { Contents, ServiceManager } from '@jupyterlab/services';
+ import {
+   acceptDialog,
+@@ -11,8 +10,9 @@
+   framePromise,
+   sleep,
+   waitForDialog
+-} from '@jupyterlab/testing';
+-import { ServiceManagerMock } from '@jupyterlab/services/lib/testutils';
++} from '@jupyterlab/testutils';
++import * as Mock from '@jupyterlab/testutils/lib/mock';
++import { toArray } from '@lumino/algorithm';
+ import expect from 'expect';
+ import { simulate } from 'simulate-event';
+ import { FileBrowserModel, FileDialog, FilterFileBrowserModel } from '../src';
+@@ -21,15 +21,18 @@
+   let manager: IDocumentManager;
+   let serviceManager: ServiceManager.IManager;
+   let registry: DocumentRegistry;
+-  let testDirectory: string;
+ 
+   beforeAll(async () => {
+-    const opener = new DocumentWidgetOpenerMock();
++    const opener: DocumentManager.IWidgetOpener = {
++      open: widget => {
++        /* no op */
++      }
++    };
+ 
+     registry = new DocumentRegistry({
+       textModelFactory: new TextModelFactory()
+     });
+-    serviceManager = new ServiceManagerMock();
++    serviceManager = new Mock.ServiceManagerMock();
+     manager = new DocumentManager({
+       registry,
+       opener,
+@@ -37,14 +40,9 @@
+     });
+ 
+     const contents = serviceManager.contents;
+-    const directory = await contents.newUntitled({ type: 'directory' });
++    await contents.newUntitled({ type: 'directory' });
+     await contents.newUntitled({ type: 'file' });
+     await contents.newUntitled({ type: 'notebook' });
+-
+-    // Place a notebook and directory within the test directory (to test defaultPath)
+-    testDirectory = directory.path;
+-    await contents.newUntitled({ type: 'notebook', path: testDirectory });
+-    await contents.newUntitled({ type: 'directory', path: testDirectory });
+   });
+ 
+   describe('FilterFileBrowserModel', () => {
+@@ -72,23 +70,23 @@
+         const model = new FileBrowserModel({ manager });
+         await model.cd();
+ 
+-        const filteredItems = Array.from(filteredModel.items());
+-        const items = Array.from(model.items());
++        const filteredItems = toArray(filteredModel.items());
++        const items = toArray(model.items());
+         expect(filteredItems.length).toBe(items.length);
+       });
+ 
+       it('should list all directories if filterDirectories is false', async () => {
+         const filteredModel = new FilterFileBrowserModel({
+           manager,
+-          filter: (model: Contents.IModel) => null,
++          filter: (model: Contents.IModel) => false,
+           filterDirectories: false
+         });
+         await filteredModel.cd();
+         const model = new FileBrowserModel({ manager });
+         await model.cd();
+ 
+-        const filteredItems = Array.from(filteredModel.items());
+-        const items = Array.from(model.items());
++        const filteredItems = toArray(filteredModel.items());
++        const items = toArray(model.items());
+         const folders = items.filter(item => item.type === 'directory');
+         expect(filteredItems.length).toBe(folders.length);
+       });
+@@ -96,14 +94,14 @@
+       it('should filter files and directories if filterDirectories is true', async () => {
+         const filteredModel = new FilterFileBrowserModel({
+           manager,
+-          filter: (model: Contents.IModel) => null,
++          filter: (model: Contents.IModel) => false,
+           filterDirectories: true
+         });
+         await filteredModel.cd();
+         const model = new FileBrowserModel({ manager });
+         await model.cd();
+ 
+-        const filteredItems = Array.from(filteredModel.items());
++        const filteredItems = toArray(filteredModel.items());
+         expect(filteredItems.length).toBe(0);
+       });
+ 
+@@ -117,10 +115,10 @@
+         const model = new FileBrowserModel({ manager });
+         await model.cd();
+ 
+-        const filteredItems = Array.from(
++        const filteredItems = toArray(
+           filteredModel.items()
+         ) as Contents.IModel[];
+-        const items = Array.from(model.items());
++        const items = toArray(model.items());
+         const shownItems = items.filter(item => item.type === 'notebook');
+         expect(filteredItems.length).toBe(shownItems.length);
+         const notebooks = filteredItems.filter(
+@@ -229,56 +227,6 @@
+       expect(items[0].type).toBe('directory');
+       expect(items[0].path).toBe('');
+     });
+-
+-    it('should return one selected file whose path matches default path', async () => {
+-      const node = document.createElement('div');
+-
+-      document.body.appendChild(node);
+-
+-      const dialog = FileDialog.getOpenFiles({
+-        manager,
+-        title: 'Select a notebook',
+-        host: node,
+-        defaultPath: testDirectory,
+-        filter: (value: Contents.IModel) =>
+-          value.type === 'notebook' ? {} : null
+-      });
+-
+-      await waitForDialog();
+-      await framePromise();
+-
+-      let counter = 0;
+-      const listing = node.getElementsByClassName('jp-DirListing-content')[0];
+-      expect(listing).toBeTruthy();
+-
+-      let items = listing.getElementsByTagName('li');
+-      counter = 0;
+-      // Wait for the directory listing to be populated
+-      while (items.length === 0 && counter < 100) {
+-        await sleep(10);
+-        items = listing.getElementsByTagName('li');
+-        counter++;
+-      }
+-
+-      // Fails if there is no items shown
+-      expect(items.length).toBeGreaterThan(0);
+-
+-      // Emulate notebook file selection
+-      const item = listing.querySelector('li[data-file-type="notebook"]')!;
+-      simulate(item, 'mousedown');
+-
+-      await acceptDialog();
+-      const result = await dialog;
+-      const files = result.value!;
+-      expect(files.length).toBe(1);
+-      expect(files[0].type).toBe('notebook');
+-      expect(files[0].name).toEqual(expect.stringMatching(/Untitled.*.ipynb/));
+-
+-      const fileDirectory = PathExt.dirname(files[0].path);
+-      expect(fileDirectory).toEqual(testDirectory);
+-
+-      document.body.removeChild(node);
+-    });
+   });
+ 
+   describe('FileDialog.getExistingDirectory()', () => {
+@@ -374,53 +322,5 @@
+       expect(items[0].type).toBe('directory');
+       expect(items[0].path).toBe('');
+     });
+-
+-    it('should return one selected directory whose path matches default path', async () => {
+-      const node = document.createElement('div');
+-
+-      document.body.appendChild(node);
+-
+-      const dialog = FileDialog.getExistingDirectory({
+-        manager,
+-        title: 'Select a folder',
+-        host: node,
+-        defaultPath: testDirectory
+-      });
+-
+-      await waitForDialog();
+-      await framePromise();
+-
+-      let counter = 0;
+-      const listing = node.getElementsByClassName('jp-DirListing-content')[0];
+-      expect(listing).toBeTruthy();
+-
+-      let items = listing.getElementsByTagName('li');
+-      // Wait for the directory listing to be populated
+-      while (items.length === 0 && counter < 100) {
+-        await sleep(10);
+-        items = listing.getElementsByTagName('li');
+-        counter++;
+-      }
+-
+-      // Fails if there is no items shown
+-      expect(items.length).toBeGreaterThan(0);
+-
+-      // Emulate notebook file selection
+-      simulate(items.item(items.length - 1)!, 'mousedown');
+-
+-      await acceptDialog();
+-      const result = await dialog;
+-      const files = result.value!;
+-      expect(files.length).toBe(1);
+-      expect(files[0].type).toBe('directory');
+-      expect(files[0].name).toEqual(
+-        expect.stringMatching(/Untitled Folder( \d+)?/)
+-      );
+-
+-      const parentDirectory = PathExt.dirname(files[0].path);
+-      expect(parentDirectory).toEqual(testDirectory);
+-
+-      document.body.removeChild(node);
+-    });
+   });
+ });
