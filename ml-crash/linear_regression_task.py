@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 # machine learning
-import keras
+# import keras
 # import ml_edu.experiment
 # import ml_edu.results
 
